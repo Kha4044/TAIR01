@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QThread>
 #include <QHostAddress>
 #include "vnaclient.h"
 
@@ -14,13 +15,17 @@ class Socket : public VNAclient
 public:
     explicit Socket(QObject* parent = nullptr);
     ~Socket() override;
+    void startThread();
+    void stopThread();
+    bool isRunning() const { return _thread && _thread->isRunning(); }
 
     VNAclient* getInstance() override;
 
 public slots:
     void startScan(int startKHz, int stopKHz, int points, int band) override;
     void stopScan() override;
-    void sendCommand(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands) override;
+    void sendCommand(const QHostAddress& host, quint16 port,
+                     const QVector<VNAcomand*>& commands) override;
     void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) override;
     void requestFDAT() override;
 
@@ -29,9 +34,10 @@ public slots:
     bool isPowerMeasuring() const { return _powerMeasuring; }
 
 private slots:
+    void initializeInThread();
+    void cleanupInThread();
     void onConnected();
     void onDisconnected();
-    // void onError(QAbstractSocket::SocketError error);
 
 private:
     QTcpSocket* _socket;
@@ -41,14 +47,15 @@ private:
     QHostAddress _host;
     quint16 _port;
     int _lastType;
-
     int _currentGraphCount;
     QVector<int> _activeTraceNumbers;
-
     int _powerStartKHz;
     int _powerStopKHz;
     int _powerPoints;
     int _powerBand;
+    QThread* _thread;
+    void sendCommandImpl(const QHostAddress& hostName, quint16 port_,
+                         const QVector<VNAcomand*>& commands);
 };
 
 #endif // SOCKET_H

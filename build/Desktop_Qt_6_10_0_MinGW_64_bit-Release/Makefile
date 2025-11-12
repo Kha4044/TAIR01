@@ -278,6 +278,7 @@ Makefile: ../../TAIR.pro C:/Qt/6.10.0/mingw_64/mkspecs/win32-g++/qmake.conf C:/Q
 		C:/Qt/6.10.0/mingw_64/mkspecs/features/qt_config.prf \
 		C:/Qt/6.10.0/mingw_64/mkspecs/win32-g++/qmake.conf \
 		C:/Qt/6.10.0/mingw_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		C:/Qt/6.10.0/mingw_64/mkspecs/features/exclusive_builds.prf \
 		C:/Qt/6.10.0/mingw_64/mkspecs/features/toolchain.prf \
 		C:/Qt/6.10.0/mingw_64/mkspecs/features/default_pre.prf \
@@ -317,7 +318,6 @@ Makefile: ../../TAIR.pro C:/Qt/6.10.0/mingw_64/mkspecs/win32-g++/qmake.conf C:/Q
 		C:/Qt/6.10.0/mingw_64/lib/Qt6Network.prl \
 		C:/Qt/6.10.0/mingw_64/lib/Qt6Core.prl \
 		C:/Qt/6.10.0/mingw_64/lib/Qt6EntryPoint.prl \
-		.qmake.stash \
 		C:/Qt/6.10.0/mingw_64/mkspecs/features/build_pass.prf \
 		res_qmlcache.qrc
 	$(QMAKE) -o Makefile ..\..\TAIR.pro -spec win32-g++ "CONFIG+=qtquickcompiler"
@@ -529,6 +529,7 @@ C:/Qt/6.10.0/mingw_64/mkspecs/features/qt_functions.prf:
 C:/Qt/6.10.0/mingw_64/mkspecs/features/qt_config.prf:
 C:/Qt/6.10.0/mingw_64/mkspecs/win32-g++/qmake.conf:
 C:/Qt/6.10.0/mingw_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 C:/Qt/6.10.0/mingw_64/mkspecs/features/exclusive_builds.prf:
 C:/Qt/6.10.0/mingw_64/mkspecs/features/toolchain.prf:
 C:/Qt/6.10.0/mingw_64/mkspecs/features/default_pre.prf:
@@ -568,7 +569,6 @@ C:/Qt/6.10.0/mingw_64/lib/Qt6Qml.prl:
 C:/Qt/6.10.0/mingw_64/lib/Qt6Network.prl:
 C:/Qt/6.10.0/mingw_64/lib/Qt6Core.prl:
 C:/Qt/6.10.0/mingw_64/lib/Qt6EntryPoint.prl:
-.qmake.stash:
 C:/Qt/6.10.0/mingw_64/mkspecs/features/build_pass.prf:
 res_qmlcache.qrc:
 qmake: FORCE

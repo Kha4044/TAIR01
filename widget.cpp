@@ -33,27 +33,32 @@ Widget::Widget(VNAclient* client, QWidget* parent)
     , _powerMeasuringMode(false)
 {
     _chartManager = new CreaterChart(this);
-
     setupUi();
-
     qRegisterMetaType<QVector<VNAcomand*>>();
     qRegisterMetaType<QHostAddress>();
-    qRegisterMetaType<QVector<VNAcomand*>>("QVector<VNAcomand*>");
+    qRegisterMetaType<QAbstractSocket::SocketError>();
+    connect(_vnaClient, &VNAclient::dataFromVNA,
+            this, &Widget::dataFromVNA, Qt::QueuedConnection);
+    connect(_vnaClient, &VNAclient::error,
+            this, &Widget::errorMessage, Qt::QueuedConnection);
 
-    connect(_vnaClient, &VNAclient::dataFromVNA, this, &Widget::dataFromVNA, Qt::QueuedConnection);
-    connect(_vnaClient, &VNAclient::error, this, &Widget::errorMessage, Qt::QueuedConnection);
+
+    startSocketThread();
 
     QTimer::singleShot(1000, this, &Widget::addTestData);
 }
 
 Widget::~Widget()
 {
-    if (_vnaClient)
-    {
-        if (_powerMeasuringMode)
-        {
+    stopSocketThread();
+
+    if (_vnaClient) {
+        qDebug() << "Остановка клиента VNA...";
+        if (_powerMeasuringMode) {
             cleanupPowerMeasurement();
         }
+
+        // Используем BlockingQueuedConnection для гарантированной остановки
         QMetaObject::invokeMethod(_vnaClient, "stopScan", Qt::BlockingQueuedConnection);
     }
 }
@@ -111,12 +116,14 @@ void Widget::requestFrequencyData()
 
 void Widget::startScanFromQml(int startKHz, int stopKHz, int points, int band)
 {
+    qDebug() << "Widget: startScanFromQml" << startKHz << stopKHz << points << band;
     if (!_vnaClient) return;
 
     QMetaObject::invokeMethod(_vnaClient, "startScan", Qt::QueuedConnection,
                               Q_ARG(int, startKHz), Q_ARG(int, stopKHz),
                               Q_ARG(int, points), Q_ARG(int, band));
 }
+
 
 void Widget::stopScanFromQml()
 {
@@ -189,6 +196,24 @@ void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& p
     }
 }
 
+void Widget::startSocketThread()
+{
+    Socket* socket = qobject_cast<Socket*>(_vnaClient);
+    if (socket) {
+        socket->startThread();
+        qDebug() << "Socket thread started";
+    }
+}
+
+void Widget::stopSocketThread()
+{
+    Socket* socket = qobject_cast<Socket*>(_vnaClient);
+    if (socket) {
+        socket->stopThread();
+        qDebug() << "Socket thread stopped";
+    }
+}
+
 void Widget::setPowerMeasuringMode(bool enabled)
 {
     if (_powerMeasuringMode == enabled)
@@ -256,6 +281,10 @@ void Widget::cleanupPowerMeasurement()
     _chartManager->clearAllTraces();
     _chartManager->setupAxes("Frequency (kHz)", "Amplitude");
 }
+
+
+
+
 
 void Widget::dataFromVNA(const QString& data, VNAcomand* cmd)
 {

@@ -61,6 +61,8 @@ template <> constexpr inline auto Socket::qt_create_metaobjectdata<qt_meta_tag_Z
         "startPowerMeasurement",
         "stopPowerMeasurement",
         "isPowerMeasuring",
+        "initializeInThread",
+        "cleanupInThread",
         "onConnected",
         "onDisconnected"
     };
@@ -90,10 +92,14 @@ template <> constexpr inline auto Socket::qt_create_metaobjectdata<qt_meta_tag_Z
         QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'isPowerMeasuring'
         QtMocHelpers::SlotData<bool() const>(21, 2, QMC::AccessPublic, QMetaType::Bool),
-        // Slot 'onConnected'
+        // Slot 'initializeInThread'
         QtMocHelpers::SlotData<void()>(22, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onDisconnected'
+        // Slot 'cleanupInThread'
         QtMocHelpers::SlotData<void()>(23, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onConnected'
+        QtMocHelpers::SlotData<void()>(24, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onDisconnected'
+        QtMocHelpers::SlotData<void()>(25, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -126,8 +132,10 @@ void Socket::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
         case 6: _t->stopPowerMeasurement(); break;
         case 7: { bool _r = _t->isPowerMeasuring();
             if (_a[0]) *reinterpret_cast<bool*>(_a[0]) = std::move(_r); }  break;
-        case 8: _t->onConnected(); break;
-        case 9: _t->onDisconnected(); break;
+        case 8: _t->initializeInThread(); break;
+        case 9: _t->cleanupInThread(); break;
+        case 10: _t->onConnected(); break;
+        case 11: _t->onDisconnected(); break;
         default: ;
         }
     }
@@ -164,14 +172,14 @@ int Socket::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 12)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 12;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 12)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 12;
     }
     return _id;
 }

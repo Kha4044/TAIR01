@@ -15,12 +15,13 @@ class Widget : public QWidget
 public:
     explicit Widget(VNAclient* vnaClient, QWidget* parent = nullptr);
     ~Widget();
-
     Q_INVOKABLE void startScanFromQml(int startKHz, int stopKHz, int points, int band);
     Q_INVOKABLE void stopScanFromQml();
     Q_INVOKABLE void applyGraphSettings(const QVariantList& graphs, const QVariantMap& params);
     Q_INVOKABLE void setPowerMeasuringMode(bool enabled);
     Q_INVOKABLE void forceDataSync();
+    void startSocketThread();
+    void stopSocketThread();
 
 signals:
     void sendCommandToVNA(QHostAddress host, quint16 port, QVector<VNAcomand*> commands);
@@ -28,6 +29,7 @@ signals:
 private slots:
     void dataFromVNA(const QString& data, VNAcomand* cmd);
     void errorMessage(int code, const QString& message);
+
 
 private:
     VNAclient* _vnaClient;
