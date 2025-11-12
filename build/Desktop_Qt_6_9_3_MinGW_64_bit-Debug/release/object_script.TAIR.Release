@@ -1,0 +1,10 @@
+release/createrchart.o
+release/main.o
+release/socket.o
+release/vnacomand.o
+release/widget.o
+release/qrc_res.o
+release/moc_createrchart.o
+release/moc_socket.o
+release/moc_vnaclient.o
+release/moc_widget.o

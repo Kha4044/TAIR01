@@ -1,0 +1,10 @@
+debug/createrchart.o
+debug/main.o
+debug/socket.o
+debug/vnacomand.o
+debug/widget.o
+debug/qrc_res.o
+debug/moc_createrchart.o
+debug/moc_socket.o
+debug/moc_vnaclient.o
+debug/moc_widget.o
