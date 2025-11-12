@@ -43,7 +43,7 @@ Widget::Widget(VNAclient* client, QWidget* parent)
     connect(_vnaClient, &VNAclient::dataFromVNA, this, &Widget::dataFromVNA, Qt::QueuedConnection);
     connect(_vnaClient, &VNAclient::error, this, &Widget::errorMessage, Qt::QueuedConnection);
 
-    // QTimer::singleShot(1000, this, &Widget::addTestData);
+    QTimer::singleShot(1000, this, &Widget::addTestData);
 }
 
 Widget::~Widget()
@@ -83,17 +83,17 @@ void Widget::setupUi()
     lay->addWidget(_chartView, 4);
 }
 
-// void Widget::addTestData()
-// {
-//     _chartManager->addTrace(99, "Test Line", Qt::red);
+void Widget::addTestData()
+{
+    _chartManager->addTrace(99, "Test Line", Qt::red);
 
-//     QVector<qreal> xData = {0, 10, 20, 30, 40, 50};
-//     QVector<qreal> yData = {10, 25, 15, 30, 20, 35};
+    QVector<qreal> xData = {0, 10, 20, 30, 40, 50};
+    QVector<qreal> yData = {10, 25, 15, 30, 20, 35};
 
-//     _chartManager->updateTraceData(99, xData, yData);
-//     _chartManager->autoScaleAxes();
-//     _chartView->update();
-// }
+    _chartManager->updateTraceData(99, xData, yData);
+    _chartManager->autoScaleAxes();
+    _chartView->update();
+}
 
 void Widget::requestFrequencyData()
 {

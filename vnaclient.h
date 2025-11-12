@@ -1,4 +1,3 @@
-// vnaclient.h
 #ifndef VNACLIENT_H
 #define VNACLIENT_H
 
@@ -20,7 +19,7 @@ public slots:
     virtual void stopScan() = 0;
     virtual void sendCommand(const QHostAddress &host, quint16 port, const QVector<VNAcomand*> &commands) = 0;
     virtual void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) = 0;
-    virtual void requestFDAT() {}
+    virtual void requestFDAT() = 0;
 
 signals:
     void connected();

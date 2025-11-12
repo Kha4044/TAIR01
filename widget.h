@@ -41,7 +41,7 @@ private:
 
     void setupUi();
     void requestFrequencyData();
-    // void addTestData();
+    void addTestData();
     void setupPowerMeasurement(int startKHz, int stopKHz, int points, int band);
     void cleanupPowerMeasurement();
 };
