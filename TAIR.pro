@@ -18,14 +18,11 @@ HEADERS += \
     vnacomand.h \
     widget.h
 
-
 FORMS += \
     widget.ui
 
 RESOURCES += \
     res.qrc
-
-# Default rules for deployment
 
 DISTFILES += \
     TAIR.pro.user \
