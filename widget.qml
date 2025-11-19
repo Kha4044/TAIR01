@@ -549,9 +549,13 @@ Rectangle {
                 stopFreqInput.readOnly = true
                 numberOfPointsInput.readOnly = true
                 freqBandInput.readOnly = true
+                numberOf_IP_Input.readOnly = true
+                numberOfPortInput.readOnly = true
                 running = true
                 if (vnaClient) {
                     vnaClient.startScan(
+                                parseInt(numberOfPortInput.text),
+                                parse(numberOf_IP_Input),
                                 parseInt(startFreqInput.text),
                                 parseInt(stopFreqInput.text),
                                 parseInt(numberOfPointsInput.text),
@@ -564,6 +568,8 @@ Rectangle {
                 stopFreqInput.readOnly = false
                 numberOfPointsInput.readOnly = false
                 freqBandInput.readOnly = false
+                numberOf_IP_Input.readOnly = false
+                numberOfPortInput.readOnly = false
                 running = false
                 if (vnaClient) {
                     vnaClient.stopScan()

@@ -7,6 +7,7 @@
 #include <QChartView>
 #include "vnaclient.h"
 #include "createrchart.h"
+#include <QHostAddress>
 
 class Widget : public QWidget
 {
@@ -15,11 +16,18 @@ class Widget : public QWidget
 public:
     explicit Widget(VNAclient* vnaClient, QWidget* parent = nullptr);
     ~Widget();
-    Q_INVOKABLE void startScanFromQml(int startKHz, int stopKHz, int points, int band);
+
+    Q_INVOKABLE void startScanFromQml(const QString& ip,
+                                      quint16 port,
+                                      int startKHz,
+                                      int stopKHz,
+                                      int points,
+                                      int band);
     Q_INVOKABLE void stopScanFromQml();
     Q_INVOKABLE void applyGraphSettings(const QVariantList& graphs, const QVariantMap& params);
     Q_INVOKABLE void setPowerMeasuringMode(bool enabled);
     Q_INVOKABLE void forceDataSync();
+    Q_INVOKABLE void showIpPortError(const QString &msg);
     void startSocketThread();
     void stopSocketThread();
 
@@ -29,7 +37,6 @@ signals:
 private slots:
     void dataFromVNA(const QString& data, VNAcomand* cmd);
     void errorMessage(int code, const QString& message);
-
 
 private:
     VNAclient* _vnaClient;
