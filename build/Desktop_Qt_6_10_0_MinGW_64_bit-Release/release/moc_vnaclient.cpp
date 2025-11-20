@@ -51,6 +51,8 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
         "VNAcomand*",
         "cmd",
         "startScan",
+        "ip",
+        "port",
         "startKHz",
         "stopKHz",
         "points",
@@ -59,7 +61,6 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
         "sendCommand",
         "QHostAddress",
         "host",
-        "port",
         "QList<VNAcomand*>",
         "commands",
         "setGraphSettings",
@@ -83,21 +84,22 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
             { QMetaType::QString, 8 }, { 0x80000000 | 9, 10 },
         }}),
         // Slot 'startScan'
-        QtMocHelpers::SlotData<void(int, int, int, int)>(11, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Int, 12 }, { QMetaType::Int, 13 }, { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
+        QtMocHelpers::SlotData<void(const QString &, quint16, int, int, int, int)>(11, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 12 }, { QMetaType::UShort, 13 }, { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
+            { QMetaType::Int, 16 }, { QMetaType::Int, 17 },
         }}),
         // Slot 'stopScan'
-        QtMocHelpers::SlotData<void()>(16, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'sendCommand'
-        QtMocHelpers::SlotData<void(const QHostAddress &, quint16, const QVector<VNAcomand*> &)>(17, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 18, 19 }, { QMetaType::UShort, 20 }, { 0x80000000 | 21, 22 },
+        QtMocHelpers::SlotData<void(const QHostAddress &, quint16, const QVector<VNAcomand*> &)>(19, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 20, 21 }, { QMetaType::UShort, 13 }, { 0x80000000 | 22, 23 },
         }}),
         // Slot 'setGraphSettings'
-        QtMocHelpers::SlotData<void(int, const QVector<int> &)>(23, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Int, 24 }, { 0x80000000 | 25, 26 },
+        QtMocHelpers::SlotData<void(int, const QVector<int> &)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Int, 25 }, { 0x80000000 | 26, 27 },
         }}),
         // Slot 'requestFDAT'
-        QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPublic, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -125,7 +127,7 @@ void VNAclient::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         case 1: _t->disconnected(); break;
         case 2: _t->error((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 3: _t->dataFromVNA((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<VNAcomand*>>(_a[2]))); break;
-        case 4: _t->startScan((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4]))); break;
+        case 4: _t->startScan((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
         case 5: _t->stopScan(); break;
         case 6: _t->sendCommand((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
         case 7: _t->setGraphSettings((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[2]))); break;

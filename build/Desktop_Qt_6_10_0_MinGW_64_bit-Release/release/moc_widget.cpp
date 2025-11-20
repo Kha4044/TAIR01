@@ -55,6 +55,7 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
         "code",
         "message",
         "startScanFromQml",
+        "ip",
         "startKHz",
         "stopKHz",
         "points",
@@ -67,7 +68,10 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
         "params",
         "setPowerMeasuringMode",
         "enabled",
-        "forceDataSync"
+        "forceDataSync",
+        "showIpPortError",
+        "msg",
+        "updateConnectionSettings"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -84,21 +88,32 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
             { QMetaType::Int, 13 }, { QMetaType::QString, 14 },
         }}),
         // Method 'startScanFromQml'
-        QtMocHelpers::MethodData<void(int, int, int, int)>(15, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Int, 16 }, { QMetaType::Int, 17 }, { QMetaType::Int, 18 }, { QMetaType::Int, 19 },
+        QtMocHelpers::MethodData<void(const QString &, quint16, int, int, int, int)>(15, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 16 }, { QMetaType::UShort, 5 }, { QMetaType::Int, 17 }, { QMetaType::Int, 18 },
+            { QMetaType::Int, 19 }, { QMetaType::Int, 20 },
         }}),
         // Method 'stopScanFromQml'
-        QtMocHelpers::MethodData<void()>(20, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::MethodData<void(const QString &, int)>(21, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 16 }, { QMetaType::Int, 5 },
+        }}),
         // Method 'applyGraphSettings'
-        QtMocHelpers::MethodData<void(const QVariantList &, const QVariantMap &)>(21, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 22, 23 }, { 0x80000000 | 24, 25 },
+        QtMocHelpers::MethodData<void(const QVariantList &, const QVariantMap &)>(22, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 23, 24 }, { 0x80000000 | 25, 26 },
         }}),
         // Method 'setPowerMeasuringMode'
-        QtMocHelpers::MethodData<void(bool)>(26, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Bool, 27 },
+        QtMocHelpers::MethodData<void(bool)>(27, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Bool, 28 },
         }}),
         // Method 'forceDataSync'
-        QtMocHelpers::MethodData<void()>(28, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::MethodData<void()>(29, 2, QMC::AccessPublic, QMetaType::Void),
+        // Method 'showIpPortError'
+        QtMocHelpers::MethodData<void(const QString &)>(30, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 31 },
+        }}),
+        // Method 'updateConnectionSettings'
+        QtMocHelpers::MethodData<void(const QString &, quint16)>(32, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 16 }, { QMetaType::UShort, 5 },
+        }}),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -125,11 +140,13 @@ void Widget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
         case 0: _t->sendCommandToVNA((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
         case 1: _t->dataFromVNA((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<VNAcomand*>>(_a[2]))); break;
         case 2: _t->errorMessage((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 3: _t->startScanFromQml((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4]))); break;
-        case 4: _t->stopScanFromQml(); break;
+        case 3: _t->startScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
+        case 4: _t->stopScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2]))); break;
         case 5: _t->applyGraphSettings((*reinterpret_cast<std::add_pointer_t<QVariantList>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QVariantMap>>(_a[2]))); break;
         case 6: _t->setPowerMeasuringMode((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1]))); break;
         case 7: _t->forceDataSync(); break;
+        case 8: _t->showIpPortError((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
+        case 9: _t->updateConnectionSettings((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2]))); break;
         default: ;
         }
     }
@@ -158,14 +175,14 @@ int Widget::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 8)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 8;
+        _id -= 10;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 8)
+        if (_id < 10)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 8;
+        _id -= 10;
     }
     return _id;
 }

@@ -12,14 +12,18 @@ class VNAclient : public QObject {
 public:
     explicit VNAclient(QObject *parent = nullptr) : QObject(parent) {}
     virtual ~VNAclient() = default;
+
     virtual VNAclient* getInstance() = 0;
 
 public slots:
-    virtual void startScan(int startKHz, int stopKHz, int points, int band) = 0;
+
+    virtual void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band) = 0;
     virtual void stopScan() = 0;
     virtual void sendCommand(const QHostAddress &host, quint16 port, const QVector<VNAcomand*> &commands) = 0;
     virtual void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) = 0;
     virtual void requestFDAT() = 0;
+
+
 
 signals:
     void connected();

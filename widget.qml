@@ -539,19 +539,28 @@ Rectangle {
         }
         onClicked: {
             if (!running) {
+
                 if (startFreqInput.text === "") startFreqInput.text = "20"
                 if (stopFreqInput.text === "") stopFreqInput.text = "4800000"
                 if (numberOfPointsInput.text === "") numberOfPointsInput.text = "201"
                 if (freqBandInput.text === "") freqBandInput.text = "10000"
-                if (numberOf_IP_Input.text === "") numberOf_IP_Input.text = "192.168.0.1"
+                if (numberOf_IP_Input.text === "") numberOf_IP_Input.text = "127.0.0.1"
                 if (numberOfPortInput.text === "") numberOfPortInput.text = "5025"
                 startFreqInput.readOnly = true
                 stopFreqInput.readOnly = true
                 numberOfPointsInput.readOnly = true
                 freqBandInput.readOnly = true
+                numberOf_IP_Input.readOnly = true
+                numberOfPortInput.readOnly = true
                 running = true
-                if (vnaClient) {
-                    vnaClient.startScan(
+                console.log("Попытка подключения к IP:", numberOf_IP_Input.text,
+                                "Порт:", numberOfPortInput.text,
+                                "Начальная частота:", startFreqInput.text,
+                                "Конечная частота:", stopFreqInput.text);
+                if (mainWidget) {
+                    mainWidget.startScanFromQml(
+                                numberOf_IP_Input.text,
+                                parseInt(numberOfPortInput.text),
                                 parseInt(startFreqInput.text),
                                 parseInt(stopFreqInput.text),
                                 parseInt(numberOfPointsInput.text),
@@ -564,6 +573,8 @@ Rectangle {
                 stopFreqInput.readOnly = false
                 numberOfPointsInput.readOnly = false
                 freqBandInput.readOnly = false
+                numberOf_IP_Input.readOnly = false
+                numberOfPortInput.readOnly = false
                 running = false
                 if (vnaClient) {
                     vnaClient.stopScan()
@@ -596,6 +607,10 @@ Rectangle {
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 4) clean = clean.slice(0,4)
                 if (clean !== text) text = clean
+                // if (mainWidget && text.length > 0) {
+                //     mainWidget.updateConnectionSettings(numberOf_IP_Input.text,
+                //                                       parseInt(numberOfPortInput.text))
+                // }
             }
             Text {
                 visible: numberOfPortInput.text.length === 0 && !numberOfPortInput.activeFocus
@@ -656,19 +671,23 @@ Rectangle {
 
                 if (formatted !== text)
                     text = formatted;
+                // if (mainWidget && text.length > 0) {
+                //     mainWidget.updateConnectionSettings(numberOf_IP_Input.text,
+                //                                       parseInt(numberOfPortInput.text))
+                // }
             }
 
             Text {
                 visible: numberOf_IP_Input.text.length === 0 && !numberOf_IP_Input.activeFocus
                 color: "#666666"
-                text: "192.168.0.1"
+                text: "127.0.0.1"
                 font.pixelSize: 16
                 anchors.centerIn: parent
             }
 
             Keys.onReturnPressed: {
                 if (text === "" || !/^(\d{1,3}\.){3}\d{1,3}$/.test(text))
-                    text = "192.168.0.1"; // значение по умолчанию
+                    text = "127.0.0.1"; // значение по умолчанию
                 focus = false;
                 console.log("✅ IP введён:", text);
             }

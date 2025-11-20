@@ -7,6 +7,7 @@
 #include <QChartView>
 #include "vnaclient.h"
 #include "createrchart.h"
+#include <QHostAddress>
 
 class Widget : public QWidget
 {
@@ -15,13 +16,18 @@ class Widget : public QWidget
 public:
     explicit Widget(VNAclient* vnaClient, QWidget* parent = nullptr);
     ~Widget();
-    Q_INVOKABLE void startScanFromQml(int startKHz, int stopKHz, int points, int band);
-    Q_INVOKABLE void stopScanFromQml();
+
+    Q_INVOKABLE void startScanFromQml(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band);
+    Q_INVOKABLE void stopScanFromQml(const QString& ip, int port);
     Q_INVOKABLE void applyGraphSettings(const QVariantList& graphs, const QVariantMap& params);
     Q_INVOKABLE void setPowerMeasuringMode(bool enabled);
     Q_INVOKABLE void forceDataSync();
+    Q_INVOKABLE void showIpPortError(const QString &msg);
+    Q_INVOKABLE void updateConnectionSettings(const QString& ip, quint16 port);
+
     void startSocketThread();
     void stopSocketThread();
+
 
 signals:
     void sendCommandToVNA(QHostAddress host, quint16 port, QVector<VNAcomand*> commands);
@@ -30,17 +36,20 @@ private slots:
     void dataFromVNA(const QString& data, VNAcomand* cmd);
     void errorMessage(int code, const QString& message);
 
-
 private:
     VNAclient* _vnaClient;
     CreaterChart* _chartManager;
     QChartView* _chartView;
     QVector<qreal> _frequencyData;
-
     bool _powerMeasuringMode;
     QVector<qreal> _powerFrequencyData;
     QVector<qreal> _powerValueData;
-
+    QString _currentIP;
+    quint16 _currentPort;
+    int _currentStartKHz;
+    int _currentStopKHz;
+    int _currentPoints;
+    int _currentBand;
     void setupUi();
     void requestFrequencyData();
     void addTestData();
