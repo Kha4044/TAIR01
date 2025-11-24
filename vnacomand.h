@@ -105,12 +105,6 @@ public:
         : VNAcomand(false, ch, QString("INITiate%1:CONTinuous %2\n").arg(ch).arg(on ? "ON" : "OFF")) {}
 };
 
-class TRIGGER_EXECUTE : public VNAcomand
-{
-public:
-    TRIGGER_EXECUTE() : VNAcomand(false, 0, "SIEEE4882:TRG\n") {}
-};
-
 class CALC_PARAMETER_COUNT : public VNAcomand_REAL
 {
 public:
@@ -208,6 +202,31 @@ public:
     CALC_TRACE_DATA_POWER(int traceNum)
         : VNAcomand_REAL(true, traceNum, QString("CALC:TRAC%1:DATA:FDAT?\n").arg(traceNum)) {}
     QVector<qreal> parseResponse(const QString& data) const override;
+};
+
+class TRIGGER_SINGL : public VNAcomand
+{
+public:
+    TRIGGER_SINGL()
+        : VNAcomand(false, 0, "TRIGger:SEQuence:SINGL\n") {}
+};
+
+class OPC_QUERY : public VNAcomand
+{
+public:
+    OPC_QUERY() : VNAcomand(true, 0, "*OPC?\n") {}
+};
+
+class WAIT_FOR_OPC : public VNAcomand
+{
+public:
+    WAIT_FOR_OPC() : VNAcomand(false, 0, "*WAI\n") {}
+};
+
+class ABORT_COMMAND : public VNAcomand
+{
+public:
+    ABORT_COMMAND() : VNAcomand(false, 0, ":ABOR\n") {}
 };
 
 #endif // VNACOMAND_H

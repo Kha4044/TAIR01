@@ -15,6 +15,8 @@ public:
 
     virtual VNAclient* getInstance() = 0;
 
+
+
 public slots:
 
     virtual void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band) = 0;

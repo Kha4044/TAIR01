@@ -226,6 +226,9 @@ void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& p
         cmds.append(new DISP_WIND_TRACE(1, num));
     }
 
+    // ДОБАВЛЯЕМ OPC ДЛЯ ГАРАНТИИ ЗАВЕРШЕНИЯ НАСТРОЙКИ
+    cmds.append(new OPC_QUERY());
+
     if (_vnaClient && !cmds.isEmpty()) {
         QVector<VNAcomand*> cmdsCopy = cmds;
         QMetaObject::invokeMethod(_vnaClient, "setGraphSettings", Qt::QueuedConnection,
@@ -240,17 +243,16 @@ void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& p
                                       Q_ARG(quint16, _currentPort),
                                       Q_ARG(QVector<VNAcomand*>, cmdsCopy));
         } else {
-            // Fallback на значения по умолчанию, если нет сохраненных
             QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
-                                      Q_ARG(QHostAddress, QHostAddress("127.0.0.1")),  // Явно указываем fallback
+                                      Q_ARG(QHostAddress, QHostAddress("127.0.0.1")),
                                       Q_ARG(quint16, _currentPort),
                                       Q_ARG(QVector<VNAcomand*>, cmdsCopy));
         }
 
         if (!traceNumbers.isEmpty()) {
-            QTimer::singleShot(500, this, &Widget::requestFrequencyData);
+            // Ждем дольше для гарантии применения настроек
+            QTimer::singleShot(1500, this, &Widget::requestFrequencyData);
         }
-        cmds.clear();
     } else {
         qDeleteAll(cmds);
     }
@@ -294,7 +296,7 @@ void Widget::setPowerMeasuringMode(bool enabled)
 void Widget::setupPowerMeasurement(int startKHz, int stopKHz, int points, int band)
 {
     _powerMeasuringMode = true;
-     // stopScanFromQml();
+    // stopScanFromQml();
     _powerFrequencyData.clear();
     _powerValueData.clear();
     _chartManager->clearAllTraces();

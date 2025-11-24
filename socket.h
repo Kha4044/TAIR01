@@ -43,6 +43,7 @@ private:
     QTimer* _fdatTimer;
     bool _scanning;
     bool _powerMeasuring;
+    bool _pendingFDAT;
     QHostAddress _host;
     quint16 _port;
     int _lastType;
@@ -54,7 +55,10 @@ private:
     int _powerBand;
     QThread* _thread;
 
+    bool waitForOperationsComplete(int timeoutMs = 30000);
+    void sendCommandWithOPC(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands);
     void sendCommandImpl(const QHostAddress& hostName, quint16 port, const QVector<VNAcomand*>& commands);
+    bool ensureConnection(const QHostAddress& host, quint16 port);
 };
 
 #endif // SOCKET_H

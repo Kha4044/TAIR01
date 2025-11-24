@@ -39,11 +39,11 @@ Rectangle {
     //     return graphColors[Math.floor(Math.random() * graphColors.length)]
     // }
 
-    function releaseColor(color) {
-        let i = usedColors.indexOf(color)
-        if (i !== -1)
-            usedColors.splice(i, 1)
-    }
+    // function releaseColor(color) {
+    //     let i = usedColors.indexOf(color)
+    //     if (i !== -1)
+    //         usedColors.splice(i, 1)
+    // }
 
     Rectangle {
            id: comboBoxField
@@ -291,35 +291,45 @@ Rectangle {
                                }
                            }
 
-                           // Кнопка удаления графика
                            Rectangle {
                                width: 22
                                height: 22
                                radius: 4
                                color: "transparent"
                                border.color: "#555"
+                               z: 999
+
+                               Rectangle {
+                                   anchors.centerIn: parent
+                                   width: 10
+                                   height: 2
+                                   color: "#fff"
+                                   rotation: 45
+                               }
+                               Rectangle {
+                                   anchors.centerIn: parent
+                                   width: 10
+                                   height: 2
+                                   color: "#fff"
+                                   rotation: -45
+                               }
+
                                MouseArea {
                                    anchors.fill: parent
+                                   z: 1000
+                                   preventStealing: true
+                                   propagateComposedEvents: true
+
                                    onClicked: {
-                                       releaseColor(model.color)
+                                       console.log("❌ DELETE graph", index)
+
+                                       // releaseColor(model.color)
                                        graphModel.remove(index)
+
                                        for (let i = 0; i < graphModel.count; ++i)
                                            graphModel.setProperty(i, "num", i + 1)
+
                                        notifyC()
-                                   }
-                                   Rectangle {
-                                       anchors.centerIn: parent
-                                       width: 10
-                                       height: 2
-                                       color: "#1e1e1e"
-                                       rotation: 45
-                                   }
-                                   Rectangle {
-                                       anchors.centerIn: parent
-                                       width: 10
-                                       height: 2
-                                       color: "#1e1e1e"
-                                       rotation: -45
                                    }
                                }
                            }
