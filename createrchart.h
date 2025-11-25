@@ -14,11 +14,10 @@ class CreaterChart : public QObject
 
 public:
     explicit CreaterChart(QObject* parent = nullptr);
-    virtual ~CreaterChart();
+    ~CreaterChart();
 
     QChart* getChart() { return _chart; }
 
-    void initializeChart();
     void setupAxes(const QString& xTitle = "Frequency (kHz)",
                    const QString& yTitle = "Amplitude");
 
@@ -30,7 +29,6 @@ public:
     void autoScaleAxes();
 
     bool hasTrace(int traceNum) const { return _seriesMap.contains(traceNum); }
-    QList<int> getTraceNumbers() const { return _seriesMap.keys(); }
 
 private:
     QChart* _chart;

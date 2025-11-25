@@ -2,10 +2,13 @@
 #define SOCKET_H
 
 #include "vnaclient.h"
+#include "vnacomand.h"
+
 #include <QTcpSocket>
 #include <QTimer>
 #include <QThread>
 #include <QVector>
+#include <QHostAddress>
 
 class Socket : public VNAclient
 {
@@ -17,7 +20,9 @@ public:
 
     VNAclient* getInstance() override;
 
-    void setTimeouts(int normalTimeout, int opcTimeout, int fdatInterval);
+    // установить таймауты (ms)
+    void setTimeouts(int normalTimeoutMs, int opcTimeoutMs, int fdatIntervalMs);
+
     void startThread();
     void stopThread();
     void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) override;
@@ -31,17 +36,19 @@ public slots:
     void stopPowerMeasurement();
 
 private slots:
+    // инициализация и очистка выполняются в thread
     void initializeInThread();
-    void cleanupInThread();
+    void cleanupInThread();        // вызывается при finished()
+    void stopInThread();           // вызывается синхронно из stopThread()
     void onConnected();
     void onDisconnected();
     void requestFDAT();
 
 private:
     void sendCommandImpl(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands);
-    void sendCommandWithOPC(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands);
     bool ensureConnection(const QHostAddress& host, quint16 port);
     bool waitForOperationsComplete(int timeoutMs);
+    void sendCommandWithOPC(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands);
 
     QTcpSocket* _socket;
     QTimer* _fdatTimer;
@@ -49,7 +56,6 @@ private:
 
     bool _scanning;
     bool _powerMeasuring;
-    int _lastType;
     int _currentGraphCount;
     QVector<int> _activeTraceNumbers;
 

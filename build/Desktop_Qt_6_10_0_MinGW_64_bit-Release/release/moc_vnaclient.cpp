@@ -66,8 +66,7 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
         "setGraphSettings",
         "graphCount",
         "QList<int>",
-        "traceNumbers",
-        "requestFDAT"
+        "traceNumbers"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -98,8 +97,6 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
         QtMocHelpers::SlotData<void(int, const QVector<int> &)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::Int, 25 }, { 0x80000000 | 26, 27 },
         }}),
-        // Slot 'requestFDAT'
-        QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPublic, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -131,7 +128,6 @@ void VNAclient::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         case 5: _t->stopScan(); break;
         case 6: _t->sendCommand((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
         case 7: _t->setGraphSettings((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[2]))); break;
-        case 8: _t->requestFDAT(); break;
         default: ;
         }
     }
@@ -178,14 +174,14 @@ int VNAclient::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 8;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 8;
     }
     return _id;
 }

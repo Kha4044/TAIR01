@@ -47,8 +47,6 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
         "errorMessage",
         "code",
         "message",
-        "requestFrequencyData",
-        "forceDataSync",
         "startScanFromQml",
         "ip",
         "port",
@@ -76,30 +74,26 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
         QtMocHelpers::SlotData<void(int, const QString &)>(6, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::Int, 7 }, { QMetaType::QString, 8 },
         }}),
-        // Slot 'requestFrequencyData'
-        QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'forceDataSync'
-        QtMocHelpers::SlotData<void()>(10, 2, QMC::AccessPrivate, QMetaType::Void),
         // Method 'startScanFromQml'
-        QtMocHelpers::MethodData<void(const QString &, quint16, int, int, int, int)>(11, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::QString, 12 }, { QMetaType::UShort, 13 }, { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
-            { QMetaType::Int, 16 }, { QMetaType::Int, 17 },
+        QtMocHelpers::MethodData<void(const QString &, quint16, int, int, int, int)>(9, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 10 }, { QMetaType::UShort, 11 }, { QMetaType::Int, 12 }, { QMetaType::Int, 13 },
+            { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
         }}),
         // Method 'stopScanFromQml'
-        QtMocHelpers::MethodData<void(const QString &, int)>(18, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::QString, 12 }, { QMetaType::Int, 13 },
+        QtMocHelpers::MethodData<void(const QString &, int)>(16, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 10 }, { QMetaType::Int, 11 },
         }}),
         // Method 'applyGraphSettings'
-        QtMocHelpers::MethodData<void(const QVariantList &, const QVariantMap &)>(19, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 20, 21 }, { 0x80000000 | 22, 23 },
+        QtMocHelpers::MethodData<void(const QVariantList &, const QVariantMap &)>(17, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 18, 19 }, { 0x80000000 | 20, 21 },
         }}),
         // Method 'setPowerMeasuringMode'
-        QtMocHelpers::MethodData<void(bool)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Bool, 25 },
+        QtMocHelpers::MethodData<void(bool)>(22, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Bool, 23 },
         }}),
         // Method 'updateConnectionSettings'
-        QtMocHelpers::MethodData<void(const QString &, quint16)>(26, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::QString, 12 }, { QMetaType::UShort, 13 },
+        QtMocHelpers::MethodData<void(const QString &, quint16)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 10 }, { QMetaType::UShort, 11 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
@@ -126,13 +120,11 @@ void Widget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
         switch (_id) {
         case 0: _t->dataFromVNA((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<VNAcomand*>>(_a[2]))); break;
         case 1: _t->errorMessage((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 2: _t->requestFrequencyData(); break;
-        case 3: _t->forceDataSync(); break;
-        case 4: _t->startScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
-        case 5: _t->stopScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2]))); break;
-        case 6: _t->applyGraphSettings((*reinterpret_cast<std::add_pointer_t<QVariantList>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QVariantMap>>(_a[2]))); break;
-        case 7: _t->setPowerMeasuringMode((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1]))); break;
-        case 8: _t->updateConnectionSettings((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2]))); break;
+        case 2: _t->startScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
+        case 3: _t->stopScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2]))); break;
+        case 4: _t->applyGraphSettings((*reinterpret_cast<std::add_pointer_t<QVariantList>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QVariantMap>>(_a[2]))); break;
+        case 5: _t->setPowerMeasuringMode((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1]))); break;
+        case 6: _t->updateConnectionSettings((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2]))); break;
         default: ;
         }
     }
@@ -157,14 +149,14 @@ int Widget::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 7)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 7;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 7)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 9;
+        _id -= 7;
     }
     return _id;
 }
