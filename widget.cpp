@@ -9,6 +9,7 @@
 #include <QChartView>
 #include <QRandomGenerator>
 #include <QtMath>
+#include <QApplication>
 
 static QString unitToScpi(const QString& unit)
 {
@@ -31,7 +32,7 @@ Widget::Widget(VNAclient* client, QWidget* parent)
     , _chartManager(nullptr)
     , _chartView(nullptr)
     , _powerMeasuringMode(false)
-    , _currentIP("192.168.0.1")  // Значения по умолчанию
+    , _currentIP("127.0.0.1")
     , _currentPort(5025)
     , _currentStartKHz(20)
     , _currentStopKHz(4800000)
@@ -47,6 +48,7 @@ Widget::Widget(VNAclient* client, QWidget* parent)
 
     connect(_vnaClient, &VNAclient::dataFromVNA, this, &Widget::dataFromVNA, Qt::QueuedConnection);
     connect(_vnaClient, &VNAclient::error, this, &Widget::errorMessage, Qt::QueuedConnection);
+    setOptimalScanSettings();
 
     startSocketThread();
     QTimer::singleShot(1000, this, &Widget::addTestData);
@@ -97,6 +99,15 @@ void Widget::addTestData()
     _chartView->update();
 }
 
+void Widget::setOptimalScanSettings()
+{
+    Socket* socket = qobject_cast<Socket*>(_vnaClient);
+    if (socket) {
+        socket->setTimeouts(20000, 60000, 2000);
+        qDebug() << "⚙️ Установлены оптимальные настройки сканирования";
+    }
+}
+
 void Widget::requestFrequencyData()
 {
     if (!_vnaClient) return;
@@ -105,7 +116,6 @@ void Widget::requestFrequencyData()
     QVector<VNAcomand*> cmds;
     cmds.append(new CALC_TRACE_DATA_XAXIS(firstTraceNum));
 
-    // ИСПОЛЬЗУЕМ СОХРАНЕННЫЕ НАСТРОЙКИ ПОДКЛЮЧЕНИЯ
     QHostAddress targetHost;
     if (!_currentIP.isEmpty() && targetHost.setAddress(_currentIP)) {
         QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
@@ -113,7 +123,6 @@ void Widget::requestFrequencyData()
                                   Q_ARG(quint16, _currentPort),
                                   Q_ARG(QVector<VNAcomand*>, cmds));
     } else {
-        // Fallback если нет сохраненных настроек
         QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
                                   Q_ARG(QHostAddress, QHostAddress::LocalHost),
                                   Q_ARG(quint16, 5025),
@@ -131,7 +140,6 @@ void Widget::startScanFromQml(const QString& ip, quint16 port, int startKHz, int
     qDebug() << "=== ЗАПУСК СКАНИРОВАНИЯ ИЗ QML ===";
     qDebug() << "IP:" << ip << "Port:" << port;
 
-    // Базовая валидация
     QHostAddress addr;
     if (!addr.setAddress(ip)) {
         QString errorMsg = QString("Некорректный IP: %1").arg(ip);
@@ -147,7 +155,6 @@ void Widget::startScanFromQml(const QString& ip, quint16 port, int startKHz, int
         return;
     }
 
-    // СОХРАНЯЕМ НАСТРОЙКИ ДЛЯ ДАЛЬНЕЙШЕГО ИСПОЛЬЗОВАНИЯ
     _currentIP = ip;
     _currentPort = port;
     _currentStartKHz = startKHz;
@@ -168,7 +175,6 @@ void Widget::startScanFromQml(const QString& ip, quint16 port, int startKHz, int
         qDebug() << "Не удалось подключить vnaClient к Socket";
     }
 
-    // Запускаем сканирование
     QMetaObject::invokeMethod(
         _vnaClient, "startScan", Qt::QueuedConnection,
         Q_ARG(QString, ip),
@@ -226,7 +232,6 @@ void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& p
         cmds.append(new DISP_WIND_TRACE(1, num));
     }
 
-    // ДОБАВЛЯЕМ OPC ДЛЯ ГАРАНТИИ ЗАВЕРШЕНИЯ НАСТРОЙКИ
     cmds.append(new OPC_QUERY());
 
     if (_vnaClient && !cmds.isEmpty()) {
@@ -235,7 +240,6 @@ void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& p
                                   Q_ARG(int, graphCount),
                                   Q_ARG(QVector<int>, traceNumbers));
 
-        // ИСПОЛЬЗУЕМ СОХРАНЕННЫЕ НАСТРОЙКИ ПОДКЛЮЧЕНИЯ
         QHostAddress targetHost;
         if (!_currentIP.isEmpty() && targetHost.setAddress(_currentIP)) {
             QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
@@ -250,7 +254,6 @@ void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& p
         }
 
         if (!traceNumbers.isEmpty()) {
-            // Ждем дольше для гарантии применения настроек
             QTimer::singleShot(1500, this, &Widget::requestFrequencyData);
         }
     } else {
@@ -296,7 +299,6 @@ void Widget::setPowerMeasuringMode(bool enabled)
 void Widget::setupPowerMeasurement(int startKHz, int stopKHz, int points, int band)
 {
     _powerMeasuringMode = true;
-    // stopScanFromQml();
     _powerFrequencyData.clear();
     _powerValueData.clear();
     _chartManager->clearAllTraces();
@@ -337,11 +339,11 @@ void Widget::dataFromVNA(const QString& data, VNAcomand* cmd)
         return;
     }
 
-    if (auto* powerCmd = dynamic_cast<SOURCE_POWER_LEVEL_GET*>(cmd)) {
-        QVector<qreal> powerData = powerCmd->parseResponse(data);
-    } else if (auto* xaxisCmd = dynamic_cast<CALC_TRACE_DATA_XAXIS*>(cmd)) {
+    if (auto* xaxisCmd = dynamic_cast<CALC_TRACE_DATA_XAXIS*>(cmd)) {
         int traceNum = xaxisCmd->type;
         _frequencyData = xaxisCmd->parseResponse(data);
+        qDebug() << "📊 Получены данные X-оси, точек:" << _frequencyData.size();
+
     } else if (auto* powerDataCmd = dynamic_cast<CALC_TRACE_DATA_POWER*>(cmd)) {
         int traceNum = powerDataCmd->type;
         QVector<qreal> powerData = powerDataCmd->parseResponse(data);
@@ -366,7 +368,9 @@ void Widget::dataFromVNA(const QString& data, VNAcomand* cmd)
             _chartManager->updateTraceData(1000, xData, powerData);
             _chartManager->autoScaleAxes();
             _chartView->update();
+            qDebug() << "✅ Обновлен график мощности, точек:" << powerData.size();
         }
+
     } else if (auto* traceCmd = dynamic_cast<CALC_TRACE_DATA_FDAT*>(cmd)) {
         int traceNum = traceCmd->type;
         if (_powerMeasuringMode) {
@@ -391,9 +395,11 @@ void Widget::dataFromVNA(const QString& data, VNAcomand* cmd)
         _chartManager->updateTraceData(traceNum, xData, amplitudeData);
         _chartManager->autoScaleAxes();
         _chartView->update();
+        qDebug() << "✅ Обновлен график трассы" << traceNum << ", точек:" << amplitudeData.size();
     }
 
     delete cmd;
+    QApplication::processEvents();
 }
 
 void Widget::forceDataSync()
@@ -422,12 +428,10 @@ void Widget::showIpPortError(const QString &msg)
 
 void Widget::updateConnectionSettings(const QString& ip, quint16 port)
 {
-
     if (port < 1 || port > 65535) {
         qDebug() << "⚠️ Некорректный порт:" << port << ", используем 5025";
         port = 5025;
     }
-
 
     QHostAddress testAddr;
     if (!testAddr.setAddress(ip) || ip.split('.').length() != 4) {

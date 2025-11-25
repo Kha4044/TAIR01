@@ -40,70 +40,57 @@ template <> constexpr inline auto Socket::qt_create_metaobjectdata<qt_meta_tag_Z
     namespace QMC = QtMocConstants;
     QtMocHelpers::StringRefStorage qt_stringData {
         "Socket",
-        "startScan",
+        "sendCommand",
         "",
-        "ip",
+        "QHostAddress",
+        "host",
         "port",
+        "QList<VNAcomand*>",
+        "commands",
+        "startScan",
+        "ip",
         "startKHz",
         "stopKHz",
         "points",
         "band",
         "stopScan",
-        "sendCommand",
-        "QHostAddress",
-        "host",
-        "QList<VNAcomand*>",
-        "commands",
-        "setGraphSettings",
-        "graphCount",
-        "QList<int>",
-        "traceNumbers",
-        "requestFDAT",
         "startPowerMeasurement",
         "stopPowerMeasurement",
         "initializeInThread",
         "cleanupInThread",
         "onConnected",
         "onDisconnected",
-        "canConnect"
+        "requestFDAT"
     };
 
     QtMocHelpers::UintData qt_methods {
+        // Slot 'sendCommand'
+        QtMocHelpers::SlotData<void(const QHostAddress &, quint16, const QVector<VNAcomand*> &)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 3, 4 }, { QMetaType::UShort, 5 }, { 0x80000000 | 6, 7 },
+        }}),
         // Slot 'startScan'
-        QtMocHelpers::SlotData<void(const QString &, quint16, int, int, int, int)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::QString, 3 }, { QMetaType::UShort, 4 }, { QMetaType::Int, 5 }, { QMetaType::Int, 6 },
-            { QMetaType::Int, 7 }, { QMetaType::Int, 8 },
+        QtMocHelpers::SlotData<void(const QString &, quint16, int, int, int, int)>(8, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 9 }, { QMetaType::UShort, 5 }, { QMetaType::Int, 10 }, { QMetaType::Int, 11 },
+            { QMetaType::Int, 12 }, { QMetaType::Int, 13 },
         }}),
         // Slot 'stopScan'
-        QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPublic, QMetaType::Void),
-        // Slot 'sendCommand'
-        QtMocHelpers::SlotData<void(const QHostAddress &, quint16, const QVector<VNAcomand*> &)>(10, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 11, 12 }, { QMetaType::UShort, 4 }, { 0x80000000 | 13, 14 },
-        }}),
-        // Slot 'setGraphSettings'
-        QtMocHelpers::SlotData<void(int, const QVector<int> &)>(15, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Int, 16 }, { 0x80000000 | 17, 18 },
-        }}),
-        // Slot 'requestFDAT'
-        QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(14, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'startPowerMeasurement'
-        QtMocHelpers::SlotData<void(int, int, int, int)>(20, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Int, 5 }, { QMetaType::Int, 6 }, { QMetaType::Int, 7 }, { QMetaType::Int, 8 },
+        QtMocHelpers::SlotData<void(int, int, int, int)>(15, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Int, 10 }, { QMetaType::Int, 11 }, { QMetaType::Int, 12 }, { QMetaType::Int, 13 },
         }}),
         // Slot 'stopPowerMeasurement'
-        QtMocHelpers::SlotData<void()>(21, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(16, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'initializeInThread'
-        QtMocHelpers::SlotData<void()>(22, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'cleanupInThread'
-        QtMocHelpers::SlotData<void()>(23, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onConnected'
-        QtMocHelpers::SlotData<void()>(24, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onDisconnected'
-        QtMocHelpers::SlotData<void()>(25, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Method 'canConnect'
-        QtMocHelpers::MethodData<bool(const QString &, quint16)>(26, 2, QMC::AccessPublic, QMetaType::Bool, {{
-            { QMetaType::QString, 3 }, { QMetaType::UShort, 4 },
-        }}),
+        QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'requestFDAT'
+        QtMocHelpers::SlotData<void()>(21, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -127,32 +114,17 @@ void Socket::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
     auto *_t = static_cast<Socket *>(_o);
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: _t->startScan((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
-        case 1: _t->stopScan(); break;
-        case 2: _t->sendCommand((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
-        case 3: _t->setGraphSettings((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[2]))); break;
-        case 4: _t->requestFDAT(); break;
-        case 5: _t->startPowerMeasurement((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4]))); break;
-        case 6: _t->stopPowerMeasurement(); break;
-        case 7: _t->initializeInThread(); break;
-        case 8: _t->cleanupInThread(); break;
-        case 9: _t->onConnected(); break;
-        case 10: _t->onDisconnected(); break;
-        case 11: { bool _r = _t->canConnect((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])));
-            if (_a[0]) *reinterpret_cast<bool*>(_a[0]) = std::move(_r); }  break;
+        case 0: _t->sendCommand((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
+        case 1: _t->startScan((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
+        case 2: _t->stopScan(); break;
+        case 3: _t->startPowerMeasurement((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4]))); break;
+        case 4: _t->stopPowerMeasurement(); break;
+        case 5: _t->initializeInThread(); break;
+        case 6: _t->cleanupInThread(); break;
+        case 7: _t->onConnected(); break;
+        case 8: _t->onDisconnected(); break;
+        case 9: _t->requestFDAT(); break;
         default: ;
-        }
-    }
-    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        switch (_id) {
-        default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-        case 3:
-            switch (*reinterpret_cast<int*>(_a[1])) {
-            default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-            case 1:
-                *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<int> >(); break;
-            }
-            break;
         }
     }
 }
@@ -176,14 +148,14 @@ int Socket::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 12)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 12;
+        _id -= 10;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 12)
-            qt_static_metacall(this, _c, _id, _a);
-        _id -= 12;
+        if (_id < 10)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 10;
     }
     return _id;
 }

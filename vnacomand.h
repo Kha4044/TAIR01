@@ -36,7 +36,8 @@ class CALC_TRACE_DATA_FDAT : public VNAcomand_REAL
 {
 public:
     CALC_TRACE_DATA_FDAT(int traceNum)
-        : VNAcomand_REAL(true, traceNum, QString("CALC:TRAC%1:DATA:FDAT?\n").arg(traceNum)) {}
+        : VNAcomand_REAL(true, traceNum,
+                         QString("CALC:TRAC%1:DATA:FDAT?\n").arg(traceNum)) {}
     QVector<qreal> parseResponse(const QString& data) const override;
 };
 
@@ -208,7 +209,14 @@ class TRIGGER_SINGL : public VNAcomand
 {
 public:
     TRIGGER_SINGL()
-        : VNAcomand(false, 0, "TRIGger:SEQuence:SINGL\n") {}
+        : VNAcomand(false, 0, "TRIGger:SEQuence:SINGle\n") {}
+};
+
+class INITIATE_SINGLE : public VNAcomand
+{
+public:
+    INITIATE_SINGLE(int channel = 1)
+        : VNAcomand(false, 0, QString("INITiate%1\n").arg(channel)) {}
 };
 
 class OPC_QUERY : public VNAcomand
@@ -227,6 +235,38 @@ class ABORT_COMMAND : public VNAcomand
 {
 public:
     ABORT_COMMAND() : VNAcomand(false, 0, ":ABOR\n") {}
+};
+
+// НОВЫЕ КОМАНДЫ ДЛЯ BUS ТРИГГЕРА
+class TRIGGER_SOURCE_BUS : public VNAcomand
+{
+public:
+    TRIGGER_SOURCE_BUS() : VNAcomand(false, 0, "TRIGger:SEQuence:SOURce BUS\n") {}
+};
+
+class TRIGGER_SOURCE_INTERNAL : public VNAcomand
+{
+public:
+    TRIGGER_SOURCE_INTERNAL() : VNAcomand(false, 0, "TRIGger:SEQuence:SOURce INTernal\n") {}
+};
+
+class INITIATE_CONTINUOUS : public VNAcomand
+{
+public:
+    INITIATE_CONTINUOUS(int channel = 1)
+        : VNAcomand(false, 0, QString("INITiate%1:CONTinuous ON\n").arg(channel)) {}
+};
+
+class INITIATE_SINGLE_SHOT : public VNAcomand
+{
+public:
+    INITIATE_SINGLE_SHOT(int channel = 1)
+        : VNAcomand(false, 0, QString("INITiate%1:CONTinuous OFF\n").arg(channel)) {}
+};
+
+class TRIGGER_SINGLE : public VNAcomand {
+public:
+    TRIGGER_SINGLE() : VNAcomand(false, 0, "TRIG:SING\n") {}
 };
 
 #endif // VNACOMAND_H

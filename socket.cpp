@@ -1,11 +1,9 @@
 #include "socket.h"
-#include "vnaclient.h"
 #include <QDebug>
-#include <QThread>
 
-#define TIMEOUT 5000
-#define FDAT_INTERVAL 500
-#define OPC_TIMEOUT 30000
+#define DEFAULT_TIMEOUT 15000
+#define DEFAULT_OPC_TIMEOUT 45000
+#define DEFAULT_FDAT_INTERVAL 2000
 
 Socket::Socket(QObject* parent)
     : VNAclient(parent)
@@ -15,6 +13,9 @@ Socket::Socket(QObject* parent)
     , _powerMeasuring(false)
     , _lastType(1)
     , _currentGraphCount(1)
+    , _normalTimeout(DEFAULT_TIMEOUT)
+    , _opcTimeout(DEFAULT_OPC_TIMEOUT)
+    , _fdatInterval(DEFAULT_FDAT_INTERVAL)
     , _powerStartKHz(20)
     , _powerStopKHz(4800000)
     , _powerPoints(201)
@@ -32,6 +33,22 @@ Socket::~Socket()
     stopThread();
 }
 
+VNAclient* Socket::getInstance()
+{
+    return this;
+}
+
+void Socket::setTimeouts(int normalTimeout, int opcTimeout, int fdatInterval)
+{
+    _normalTimeout = normalTimeout;
+    _opcTimeout = opcTimeout;
+    _fdatInterval = fdatInterval;
+
+    if (_fdatTimer && _fdatTimer->isActive()) {
+        _fdatTimer->setInterval(_fdatInterval);
+    }
+}
+
 void Socket::startThread()
 {
     if (_thread && !_thread->isRunning())
@@ -41,10 +58,20 @@ void Socket::startThread()
 void Socket::stopThread()
 {
     if (_thread && _thread->isRunning()) {
-        QMetaObject::invokeMethod(this, "stopScan", Qt::BlockingQueuedConnection);
-        QMetaObject::invokeMethod(this, "stopPowerMeasurement", Qt::BlockingQueuedConnection);
+        _scanning = false;
+        _powerMeasuring = false;
+
+        if (_fdatTimer) {
+            _fdatTimer->stop();
+        }
+
+        QMetaObject::invokeMethod(this, "cleanupInThread", Qt::QueuedConnection);
         _thread->quit();
-        _thread->wait();
+
+        if (!_thread->wait(3000)) {
+            _thread->terminate();
+            _thread->wait();
+        }
     }
 }
 
@@ -55,27 +82,41 @@ void Socket::initializeInThread()
     connect(_socket, &QTcpSocket::disconnected, this, &Socket::onDisconnected);
     connect(_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this, [this](QAbstractSocket::SocketError socketError) {
+                if (!_scanning && !_powerMeasuring) return;
+
                 qDebug() << "❌ Ошибка сокета:" << socketError << _socket->errorString();
-                emit error(socketError, _socket->errorString());
+                if (socketError != QAbstractSocket::RemoteHostClosedError) {
+                    emit error(socketError, _socket->errorString());
+                }
             });
 
     _fdatTimer = new QTimer(this);
-    _fdatTimer->setInterval(FDAT_INTERVAL);
+    _fdatTimer->setInterval(_fdatInterval);
     _fdatTimer->setSingleShot(false);
     connect(_fdatTimer, &QTimer::timeout, this, &Socket::requestFDAT);
 
     qDebug() << "✅ Сокет инициализирован в потоке:" << QThread::currentThread();
+    qDebug() << "⚙️ Настройки таймаутов - Normal:" << _normalTimeout << "ms, OPC:" << _opcTimeout << "ms, FDAT:" << _fdatInterval << "ms";
 }
 
 void Socket::cleanupInThread()
 {
-    if (_fdatTimer)
-        _fdatTimer->stop();
+    qDebug() << "🧹 Очистка сокета...";
 
-    if (_socket && _socket->state() == QAbstractSocket::ConnectedState) {
-        _socket->disconnectFromHost();
-        _socket->waitForDisconnected(500);
+    if (_fdatTimer) {
+        _fdatTimer->stop();
     }
+
+    if (_socket) {
+        if (_socket->state() == QAbstractSocket::ConnectedState) {
+            _socket->disconnectFromHost();
+            if (!_socket->waitForDisconnected(1000)) {
+                _socket->abort();
+            }
+        }
+    }
+
+    qDebug() << "✅ Очистка завершена";
 }
 
 void Socket::setGraphSettings(int graphCount, const QVector<int>& traceNumbers)
@@ -86,27 +127,44 @@ void Socket::setGraphSettings(int graphCount, const QVector<int>& traceNumbers)
 
 bool Socket::ensureConnection(const QHostAddress& host, quint16 port)
 {
-    if (!_socket) return false;
+    if (!_socket) {
+        qDebug() << "❌ Сокет не инициализирован";
+        return false;
+    }
 
-    if (_socket->state() == QAbstractSocket::ConnectedState && _host == host && _port == port) {
+    if (_socket->state() == QAbstractSocket::ConnectedState &&
+        _host == host && _port == port) {
         return true;
     }
 
-    // Если подключены к другому хосту/порту - переподключаемся
     if (_socket->state() == QAbstractSocket::ConnectedState) {
+        qDebug() << "🔁 Переподключение к новому хосту...";
         _socket->disconnectFromHost();
-        _socket->waitForDisconnected(1000);
+        if (!_socket->waitForDisconnected(1000)) {
+            _socket->abort();
+        }
     }
 
     qDebug() << "🔗 Подключение к" << host.toString() << ":" << port;
     _socket->connectToHost(host, port);
-    if (!_socket->waitForConnected(TIMEOUT)) {
-        emit error(_socket->error(), _socket->errorString());
+
+    if (!_socket->waitForConnected(_normalTimeout)) {
+        QAbstractSocket::SocketError socketError = _socket->error();
+        QString errorString = _socket->errorString();
+
+        qDebug() << "❌ Не удалось подключиться за" << _normalTimeout << "ms";
+        qDebug() << "Код ошибки:" << socketError;
+        qDebug() << "Текст ошибки:" << errorString;
+
+        emit error(socketError, errorString);
         return false;
     }
 
     _host = host;
     _port = port;
+    QThread::msleep(100);
+
+    qDebug() << "✅ Подключение установлено";
     return true;
 }
 
@@ -117,9 +175,15 @@ bool Socket::waitForOperationsComplete(int timeoutMs)
         return false;
     }
 
-    qDebug() << "⏳ Ожидание завершения операций...";
+    qDebug() << "⏳ Ожидание завершения операций (" << timeoutMs << "ms)...";
+
+    _socket->readAll();
     _socket->write("*OPC?\n");
-    _socket->flush();
+
+    if (!_socket->flush()) {
+        qDebug() << "❌ Ошибка отправки OPC команды";
+        return false;
+    }
 
     if (!_socket->waitForReadyRead(timeoutMs)) {
         qDebug() << "❌ Таймаут ожидания OPC (" << timeoutMs << "ms)";
@@ -145,7 +209,6 @@ void Socket::sendCommandWithOPC(const QHostAddress& host, quint16 port, const QV
         return;
     }
 
-    // Отправляем все команды
     for (auto *cmd : commands) {
         QByteArray ba = cmd->SCPI.toUtf8();
         qDebug() << "📤 Отправка:" << ba.trimmed();
@@ -157,7 +220,7 @@ void Socket::sendCommandWithOPC(const QHostAddress& host, quint16 port, const QV
             continue;
         }
 
-        if (_socket->waitForReadyRead(TIMEOUT)) {
+        if (_socket->waitForReadyRead(_normalTimeout)) {
             QByteArray resp = _socket->readAll();
             emit dataFromVNA(QString::fromUtf8(resp), cmd);
         } else {
@@ -166,8 +229,9 @@ void Socket::sendCommandWithOPC(const QHostAddress& host, quint16 port, const QV
         }
     }
 
-    // ЖДЕМ ЗАВЕРШЕНИЯ ВСЕХ ОПЕРАЦИЙ
-    waitForOperationsComplete(OPC_TIMEOUT);
+    if (!waitForOperationsComplete(_opcTimeout)) {
+        qDebug() << "⚠️ OPC не завершился, но продолжаем работу";
+    }
 }
 
 void Socket::sendCommand(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands)
@@ -201,20 +265,31 @@ void Socket::sendCommandImpl(const QHostAddress& host, quint16 port, const QVect
 
     for (auto *cmd : commands) {
         QByteArray ba = cmd->SCPI.toUtf8();
+        qDebug() << "📤 Отправка команды:" << ba.trimmed();
         _socket->write(ba);
-        _socket->flush();
+
+        if (!_socket->flush()) {
+            qDebug() << "❌ Ошибка отправки данных";
+            delete cmd;
+            continue;
+        }
 
         if (!cmd->request) {
             delete cmd;
             continue;
         }
 
-        if (_socket->waitForReadyRead(TIMEOUT)) {
+        int timeout = _normalTimeout;
+        if (cmd->SCPI.contains("FDAT") || cmd->SCPI.contains("XAXIS")) {
+            timeout = 30000;
+        }
+
+        if (_socket->waitForReadyRead(timeout)) {
             QByteArray resp = _socket->readAll();
+            qDebug() << "📨 Получено" << resp.size() << "байт в ответ на:" << ba.trimmed();
             emit dataFromVNA(QString::fromUtf8(resp), cmd);
         } else {
-            qDebug() << "❌ Таймаут ожидания ответа";
-            delete cmd;
+            qDebug() << "❌ Таймаут ожидания ответа (" << timeout << "ms) на команду:" << ba.trimmed();
         }
     }
 }
@@ -245,7 +320,6 @@ void Socket::startScan(const QString& ip, quint16 port, int startKHz, int stopKH
         return;
     }
 
-    // Настройка параметров сканирования
     qint64 startHz = qint64(startKHz) * 1000LL;
     qint64 stopHz = qint64(stopKHz) * 1000LL;
     qint64 bwHz = qint64(band);
@@ -258,21 +332,20 @@ void Socket::startScan(const QString& ip, quint16 port, int startKHz, int stopKH
     cmds.append(new SENS_FREQ_STOP(1, stopHz));
     cmds.append(new SENS_SWE_POINT(1, points));
     cmds.append(new SENS_BWID(1, bwHz));
-    cmds.append(new INIT_CONT_MODE(1, true));
-    cmds.append(new TRIGGER_SOURCE("IMM"));
+    cmds.append(new TRIGGER_SOURCE_BUS());
+    cmds.append(new INITIATE_CONTINUOUS(1));
 
-    // ОТПРАВЛЯЕМ КОМАНДЫ С ОЖИДАНИЕМ ЗАВЕРШЕНИЯ
     sendCommandWithOPC(addr, port, cmds);
 
     if (!_scanning) {
         _scanning = true;
         if (_fdatTimer) {
             _fdatTimer->start();
-            qDebug() << "Таймер FDAT запущен";
+            qDebug() << "Таймер FDAT запущен с интервалом" << _fdatInterval << "ms";
         }
     }
 
-    qDebug() << "✅ СКАНИРОВАНИЕ ЗАПУЩЕНО И НАСТРОЙКИ ПРИМЕНЕНЫ";
+    qDebug() << "✅ СКАНИРОВАНИЕ НАСТРОЕНО";
 }
 
 void Socket::stopScan()
@@ -284,42 +357,79 @@ void Socket::stopScan()
 
     if (!_scanning) return;
 
+    qDebug() << "🛑 Остановка сканирования...";
     _scanning = false;
-    if (_fdatTimer) _fdatTimer->stop();
+
+    if (_fdatTimer) {
+        _fdatTimer->stop();
+        qDebug() << "⏹️ Таймер FDAT остановлен";
+    }
 
     QVector<VNAcomand*> cmds;
     cmds.append(new ABORT_COMMAND());
-    cmds.append(new INIT_CONT_MODE(1, false));
-    sendCommandImpl(_host, _port, cmds);
+    cmds.append(new INITIATE_SINGLE_SHOT(1));
 
-    qDebug() << "🛑 Сканирование остановлено";
+    int savedTimeout = _normalTimeout;
+    _normalTimeout = 5000;
+    sendCommandImpl(_host, _port, cmds);
+    _normalTimeout = savedTimeout;
+
+    qDebug() << "✅ Сканирование остановлено";
 }
 
 void Socket::requestFDAT()
 {
     if (!_scanning && !_powerMeasuring) return;
     if (_activeTraceNumbers.isEmpty()) return;
-
-    // Проверяем, что есть активное подключение
     if (!_socket || _socket->state() != QAbstractSocket::ConnectedState) {
         qDebug() << "❌ Нет активного подключения для запроса FDAT";
         return;
     }
 
+    static bool isProcessing = false;
+    if (isProcessing) {
+        qDebug() << "⏸️ Пропускаем FDAT - предыдущий запрос еще выполняется";
+        return;
+    }
+    isProcessing = true;
+
+    qDebug() << "📊 requestFDAT: начало получения данных...";
+
+    // 1) Отправляем программный триггер для BUS-источника: TRIG:SING (если TRIG:SOUR BUS установлен)
+    qDebug() << "🎯 Отправка BUS триггера (TRIG:SING)...";
+    QVector<VNAcomand*> trigCmds;
+    trigCmds.append(new TRIGGER_SINGLE());
+    sendCommandImpl(_host, _port, trigCmds); // отправка без удаления ответа (команда не request)
+
+    // 2) Ждём завершения измерения через OPC
+    qDebug() << "⏳ Ожидание завершения сканирования (OPC)...";
+    if (!waitForOperationsComplete(_opcTimeout)) {
+        qDebug() << "⚠️ Таймаут ожидания OPC - продолжим попытку чтения данных";
+        // мы не возвращаемся — пытаемся прочитать данные в любом случае
+    }
+
+    // 3) Запрашиваем X-axis
+    qDebug() << "📈 Получение данных X-оси...";
     QVector<VNAcomand*> fx;
     fx.append(new CALC_TRACE_DATA_XAXIS(_activeTraceNumbers.first()));
-    sendCommandImpl(_host, _port, fx);
+    sendCommandImpl(_host, _port, fx); // sendCommandImpl отправит и вызовет emit dataFromVNA
 
+    // 4) Запрашиваем данные трасс
     for (int tr : _activeTraceNumbers) {
+        qDebug() << "📊 Получение данных трассы" << tr << "...";
         QVector<VNAcomand*> cmds;
-        cmds.append(new CALC_TRACE_SELECT(tr));
         if (_powerMeasuring)
             cmds.append(new CALC_TRACE_DATA_POWER(tr));
         else
             cmds.append(new CALC_TRACE_DATA_FDAT(tr));
-
         sendCommandImpl(_host, _port, cmds);
     }
+
+    qDebug() << "🎉 requestFDAT: чтение данных инициировано";
+    // небольшая пауза чтобы UI успел обработать входящие сигналы
+    QThread::msleep(20);
+
+    isProcessing = false;
 }
 
 void Socket::startPowerMeasurement(int startKHz, int stopKHz, int points, int band)
@@ -336,10 +446,9 @@ void Socket::startPowerMeasurement(int startKHz, int stopKHz, int points, int ba
     cmds.append(new OUTPUT_PORT_STATE(1, true));
     cmds.append(new CALC_PARAMETER_POWER(1, "R1"));
     cmds.append(new CALC_TRACE_FORMAT_POWER(1, "MLOG"));
-    cmds.append(new INIT_CONT_MODE(1, true));
-    cmds.append(new TRIGGER_SOURCE("IMM"));
+    cmds.append(new TRIGGER_SOURCE_BUS());
+    cmds.append(new INITIATE_CONTINUOUS(1));
 
-    // ОТПРАВЛЯЕМ С ОЖИДАНИЕМ ЗАВЕРШЕНИЯ
     sendCommandWithOPC(_host, _port, cmds);
 
     if (!_powerMeasuring) {
@@ -355,15 +464,23 @@ void Socket::stopPowerMeasurement()
 {
     if (!_powerMeasuring) return;
 
+    qDebug() << "🛑 Остановка измерения мощности...";
     _powerMeasuring = false;
-    if (_fdatTimer) _fdatTimer->stop();
+
+    if (_fdatTimer) {
+        _fdatTimer->stop();
+    }
 
     QVector<VNAcomand*> cmds;
     cmds.append(new ABORT_COMMAND());
     cmds.append(new INIT_CONT_MODE(1, false));
-    sendCommandImpl(_host, _port, cmds);
 
-    qDebug() << "🛑 Измерение мощности остановлено";
+    int savedTimeout = _normalTimeout;
+    _normalTimeout = 5000;
+    sendCommandImpl(_host, _port, cmds);
+    _normalTimeout = savedTimeout;
+
+    qDebug() << "✅ Измерение мощности остановлено";
 }
 
 void Socket::onConnected()
@@ -375,12 +492,15 @@ void Socket::onConnected()
 void Socket::onDisconnected()
 {
     qDebug() << "🔌 Подключение разорвано";
-    emit disconnected();
-}
 
-VNAclient* Socket::getInstance()
-{
-    return this;
+    _scanning = false;
+    _powerMeasuring = false;
+
+    if (_fdatTimer) {
+        _fdatTimer->stop();
+    }
+
+    emit disconnected();
 }
 
 bool Socket::canConnect(const QString &ip, quint16 port)
@@ -391,11 +511,8 @@ bool Socket::canConnect(const QString &ip, quint16 port)
     QTcpSocket testSocket;
     testSocket.connectToHost(ip, port);
 
-    qDebug() << "Состояние сокета после connectToHost:" << testSocket.state();
+    bool connected = testSocket.waitForConnected(5000);
 
-    bool connected = testSocket.waitForConnected(2000);
-
-    qDebug() << "Состояние сокета после waitForConnected:" << testSocket.state();
     qDebug() << "Результат подключения:" << connected;
 
     if (!connected) {
@@ -405,10 +522,7 @@ bool Socket::canConnect(const QString &ip, quint16 port)
 
     if (connected) {
         testSocket.disconnectFromHost();
-        if (testSocket.state() != QAbstractSocket::UnconnectedState) {
-            testSocket.waitForDisconnected(500);
-        }
-        qDebug() << "Подключение успешно, сокет отключен";
+        testSocket.waitForDisconnected(1000);
     }
 
     qDebug() << "=== КОНЕЦ ДИАГНОСТИКИ ===";
