@@ -9,6 +9,7 @@ Rectangle {
     height: 640
     visible: true
     color: "#1e1e1e"
+    property bool isRunning: false
 
     // property var graphColors: [
     //     "#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#5ac8fa", "#007aff", "#5856d6", "#af52de",
@@ -94,7 +95,11 @@ Rectangle {
            onClosed: {
                if (!forceClose) popup.open()
            }
-
+           Component.onCompleted: {
+               Qt.callLater(function() {
+                   popup.open()
+               })
+           }
            background: Rectangle {
                radius: 6
                color: "#202020"
@@ -373,16 +378,18 @@ Rectangle {
     }
 
     // Начальная частота
-    Text { text: "Начальная ƒ (кГц)"; color: "#666"; font.pixelSize: 12; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: 18; anchors.topMargin: 495 }
+    Text { text: "Начальная ƒ (кГц)"; color: "#666"; font.pixelSize: 10; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: 8; anchors.topMargin: 428 }
     Rectangle {
-        id: startFreq; x: 28; y: 517; width: 78; height: 36; radius: 6; color: "#2a2a2a"; border.color: "#444"
+        id: startFreq; x: 8; y: 447; width: 78; height: 36; radius: 6; color: "#2a2a2a"; border.color: "#444"
         onActiveFocusChanged: { if (activeFocus) Qt.inputMethod.hide() }
         TextInput {
             id: startFreqInput
+            readOnly: isRunning
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            anchors.fill: parent; anchors.margins: 8; color: "#e0e0e0"; font.pixelSize: 16
+            anchors.fill: parent; anchors.margins: 8; color: isRunning ? "#708090" : "#e0e0e0"; font.pixelSize: 16
             onTextChanged: {
+                if (readOnly) return
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 7) clean = clean.slice(0,7)
                 if (clean !== text) text = clean
@@ -396,21 +403,23 @@ Rectangle {
                 focus = false
                 console.log("✅ Начальная частота:", text)
             }
-            Text { text: "20"; color: "#666"; anchors.centerIn: parent; visible: startFreqInput.text.length === 0 && !startFreqInput.activeFocus; font.pixelSize: 16 }
+            Text { text: "20"; color: Qt.rgba(0.87, 0.87, 0.87, 0.1); anchors.centerIn: parent; visible: startFreqInput.text.length === 0 && !startFreqInput.activeFocus; font.pixelSize: 16 }
         }
     }
 
     // Конечная частота
-    Text { color: "#666666"; text: "Конечная ƒ (кГц)"; font.pixelSize: 12; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: 132; anchors.topMargin: 495 }
+    Text { color: "#666666"; text: "Конечная ƒ (кГц)"; font.pixelSize: 10; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: 8; anchors.topMargin: 489 }
     Rectangle {
-        id: stopFreq; x: 139; y: 517; width: 78; height: 36; radius: 6; color: "#2a2a2a"; border.color: "#444"
+        id: stopFreq; x: 8; y: 509; width: 78; height: 36; radius: 6; color: "#2a2a2a"; border.color: "#444"
         onActiveFocusChanged: { if (activeFocus) Qt.inputMethod.hide() }
         TextInput {
             id: stopFreqInput
-            anchors.fill: parent; anchors.margins: 8; color: "#e0e0e0"; font.pixelSize: 16
+            readOnly: isRunning
+            anchors.fill: parent; anchors.margins: 8; color: isRunning ? "#708090" : "#e0e0e0"; font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             onTextChanged: {
+                if (readOnly) return
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 7) clean = clean.slice(0,7)
                 if (clean !== text) text = clean
@@ -424,21 +433,23 @@ Rectangle {
                 focus = false
                 console.log("✅ Конечная частота:", text)
             }
-            Text { text: "4800000"; color: "#666"; anchors.centerIn: parent; visible: stopFreqInput.text.length === 0 && !stopFreqInput.activeFocus; font.pixelSize: 16 }
+            Text { text: "4800000";  color: Qt.rgba(0.87, 0.87, 0.87, 0.1); anchors.centerIn: parent; visible: stopFreqInput.text.length === 0 && !stopFreqInput.activeFocus; font.pixelSize: 16 }
         }
     }
 
     // Количество точек
-    Text { color: "#666666"; text: "Кол-во точек"; font.pixelSize: 12; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: 240; anchors.topMargin: 495 }
+    Text { color: "#666666"; text: "Кол-во точек"; font.pixelSize: 10; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: 120; anchors.topMargin: 489 }
     Rectangle {
-        id: numberOfPoints; x: 240; y: 517; width: 78; height: 36; radius: 6; color: "#2a2a2a"; border.color: "#444"
+        id: numberOfPoints; x: 111; y: 509; width: 78; height: 36; radius: 6; color: "#2a2a2a"; border.color: "#444"
         onActiveFocusChanged: { if (activeFocus) Qt.inputMethod.hide() }
         TextInput {
+            readOnly: isRunning
             id: numberOfPointsInput
-            anchors.fill: parent; anchors.margins: 8; color: "#e0e0e0"; font.pixelSize: 16
+            anchors.fill: parent; anchors.margins: 8; color: isRunning ? "#708090" : "#e0e0e0"; font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             onTextChanged: {
+                if (readOnly) return
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 4) clean = clean.slice(0,4)
                 if (clean !== text) text = clean
@@ -452,24 +463,26 @@ Rectangle {
                 focus = false
                 console.log("✅ Количество точек:", text)
             }
-            Text { text: "201"; color: "#666"; anchors.centerIn: parent; visible: numberOfPointsInput.text.length === 0 && !numberOfPointsInput.activeFocus; font.pixelSize: 16 }
+            Text { text: "201";  color: Qt.rgba(0.87, 0.87, 0.87, 0.1); anchors.centerIn: parent; visible: numberOfPointsInput.text.length === 0 && !numberOfPointsInput.activeFocus; font.pixelSize: 16 }
         }
     }
 
     // Полоса ПЧ
-    Rectangle { id: freqBand; x: 342; y: 517; width: 78; height: 36; color: "#2a2a2a"; radius: 6; border.color: "#444444"
+    Rectangle { id: freqBand; x: 111; y: 447; width: 78; height: 36; color: "#2a2a2a"; radius: 6; border.color: "#444444"
         TextInput {
             id: freqBandInput
-            color: "#e0e0e0"
+            readOnly: isRunning
+            color: isRunning ? "#708090" : "#e0e0e0"
             anchors.fill: parent; anchors.margins: 8; font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             onTextChanged: {
+                if (readOnly) return
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 5) clean = clean.slice(0,5)
                 if (clean !== text) text = clean
             }
-            Text { visible: freqBandInput.text.length === 0 && !freqBandInput.activeFocus; color: "#666666"; text: "10000"; font.pixelSize: 16; anchors.centerIn: parent }
+            Text { visible: freqBandInput.text.length === 0 && !freqBandInput.activeFocus; color: Qt.rgba(0.87, 0.87, 0.87, 0.1); text: "10000"; font.pixelSize: 16; anchors.centerIn: parent }
             Keys.onReturnPressed: {
                 let value = parseInt(text)
                 if (isNaN(value) || text === "") value = 10000
@@ -531,7 +544,7 @@ Rectangle {
     Button {
         id: startStopButton
         property bool running: false
-        x: 10; y: 584; width: 151; height: 40; font.pixelSize: 16
+        x: 8; y: 585; width: 419; height: 40; font.pixelSize: 16
         contentItem: Text {
             anchors.centerIn: parent
             text: startStopButton.running ? "Stop" : "Start"
@@ -556,13 +569,9 @@ Rectangle {
                 if (freqBandInput.text === "") freqBandInput.text = "10000"
                 if (numberOf_IP_Input.text === "") numberOf_IP_Input.text = "127.0.0.1"
                 if (numberOfPortInput.text === "") numberOfPortInput.text = "5025"
-                startFreqInput.readOnly = true
-                stopFreqInput.readOnly = true
-                numberOfPointsInput.readOnly = true
-                freqBandInput.readOnly = true
-                numberOf_IP_Input.readOnly = true
-                numberOfPortInput.readOnly = true
+                if (powerBandInput.text === "") powerBandInput.text = "0"
                 running = true
+                isRunning = true
                 console.log("Попытка подключения к IP:", numberOf_IP_Input.text,
                                 "Порт:", numberOfPortInput.text,
                                 "Начальная частота:", startFreqInput.text,
@@ -579,13 +588,8 @@ Rectangle {
                     notifyC()
                 }
             } else {
-                startFreqInput.readOnly = false
-                stopFreqInput.readOnly = false
-                numberOfPointsInput.readOnly = false
-                freqBandInput.readOnly = false
-                numberOf_IP_Input.readOnly = false
-                numberOfPortInput.readOnly = false
                 running = false
+                isRunning = false
                 if (vnaClient) {
                     vnaClient.stopScan()
                 }
@@ -598,22 +602,24 @@ Rectangle {
     //Данные порта
     Rectangle {
         id: numberOfPort
-        x: 330
-        y: 586
-        width: 101
+        x: 356
+        y: 447
+        width: 71
         height: 36
         color: "#2a2a2a"
         radius: 6
         border.color: "#444444"
         TextInput {
+            readOnly: isRunning
             id: numberOfPortInput
-            color: "#e0e0e0"
+            color: isRunning ? "#708090" : "#e0e0e0"
             anchors.fill: parent
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             anchors.margins: 8
             font.pixelSize: 16
             onTextChanged: {
+                if (readOnly) return
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 4) clean = clean.slice(0,4)
                 if (clean !== text) text = clean
@@ -624,7 +630,7 @@ Rectangle {
             }
             Text {
                 visible: numberOfPortInput.text.length === 0 && !numberOfPortInput.activeFocus
-                color: "#666666"
+                color: Qt.rgba(0.87, 0.87, 0.87, 0.1)
                 text: "5025"
                 font.pixelSize: 16
                 anchors.centerIn: parent
@@ -641,9 +647,9 @@ Rectangle {
     //IP Устройства
     Rectangle {
         id: numberOf_IP
-        x: 167
-        y: 586
-        width: 150
+        x: 211
+        y: 447
+        width: 128
         height: 36
         color: "#2a2a2a"
         radius: 6
@@ -651,7 +657,7 @@ Rectangle {
 
         TextInput {
             id: numberOf_IP_Input
-            color: "#e0e0e0"
+            color: isRunning ? "#708090" : "#e0e0e0"
             anchors.fill: parent
             anchors.margins: 8
             font.pixelSize: 16
@@ -689,8 +695,9 @@ Rectangle {
 
             Text {
                 visible: numberOf_IP_Input.text.length === 0 && !numberOf_IP_Input.activeFocus
-                color: "#666666"
+                color: Qt.rgba(0.87, 0.87, 0.87, 0.1)      // плейсхолдер тоже темнеет
                 text: "127.0.0.1"
+
                 font.pixelSize: 16
                 anchors.centerIn: parent
             }
@@ -709,9 +716,9 @@ Rectangle {
         text: "IP устройства"
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.leftMargin: 205
-        anchors.topMargin: 564
-        font.pixelSize: 12
+        anchors.leftMargin: 244
+        anchors.topMargin: 428
+        font.pixelSize: 10
     }
 
     Text {
@@ -721,22 +728,146 @@ Rectangle {
         text: "Порт"
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.leftMargin: 367
-        anchors.topMargin: 564
-        font.pixelSize: 12
+        anchors.leftMargin: 378
+        anchors.topMargin: 427
+        font.pixelSize: 10
     }
 
     Text {
+        width: 34
+        height: 14
         color: "#666666"
         text: "ПЧ (Гц)"
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.leftMargin: 361
-        anchors.topMargin: 495
-        font.pixelSize: 12
+        anchors.leftMargin: 133
+        anchors.topMargin: 428
+        font.pixelSize: 10
     }
 
+    Rectangle {
+        id: powerBand
+        x: 211
+        y: 509
+        width: 72
+        height: 36
+        color: "#2a2a2a"
+        radius: 6
+        border.color: "#444444"
 
+        TextInput {
+            id: powerBandInput
+            readOnly: isRunning
+            color: isRunning ? "#708090" : "#e0e0e0"
+            anchors.fill: parent
+            anchors.margins: 8
+            font.pixelSize: 16
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            onTextChanged: {
+                if (readOnly) return
+                    let clean = text.replace(/[^0-9]/g, "")
+                if (clean.length > 5) clean = clean.slice(0,5)
+                if (clean !== text) text = clean
+            }
+            Text {
+                visible: powerBandInput.text.length === 0 && !powerBandInput.activeFocus
+                color: Qt.rgba(0.87, 0.87, 0.87, 0.1)
+                text: "0"
+                font.pixelSize: 16
+                anchors.centerIn: parent
+            }
+            Keys.onReturnPressed: {
+                let value = parseInt(text)
+                if (isNaN(value) || text === "") value = 0
+                else if (value < -60) value = -60
+                else if (value > 15) value = 15
+                text = value.toString()
+                focus = false
+                console.log("✅ Полоса ПЧ:", text)
+            }
+        }
+    }
+
+    Text {
+        color: "#666666"
+        text: "Мощность (дБ)"
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.leftMargin: 211
+        anchors.topMargin: 489
+        font.pixelSize: 10
+    }
+
+    ComboBox {
+        id: stimCombo
+        x: 310
+        y: 509
+        width: 103
+        height: 36
+        model: ["Лин", "Лог", "Сегм", "Мощн"]
+        currentIndex: 0
+        font.pixelSize: 16
+        indicator: null
+
+        background: Rectangle {
+            color: "#282828"
+            opacity: 0.7
+            radius: 4
+        }
+
+
+        contentItem: Text {
+            text: stimCombo.currentText
+            color: "#e0e0e0"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        popup: Popup {
+            id: popupStim
+            y: stimCombo.height
+            width: stimCombo.width
+            height: 90
+            padding: 15
+            implicitWidth: stimCombo.width
+
+            background: Rectangle {
+                color: "#b3282828"
+                radius: 4
+            }
+
+            contentItem: ListView {
+                model: stimCombo.model
+                clip: true
+
+                delegate: ItemDelegate {
+                    width: parent.width
+                    height: 26
+
+                    background: Rectangle {
+                        color: hovered ? "#505050" : Qt.rgba(40/255,40/255,40/255,0.7)
+                    }
+
+                    contentItem: Text {
+                        text: modelData
+                        padding: 15
+                        color: "#e0e0e0"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            stimCombo.currentIndex = index
+                            popupStim.close()
+                        }
+                    }
+                }
+            }
+        }
+    }
     // Функция уведомления C++
     function notifyC() {
         Qt.callLater(function() {
