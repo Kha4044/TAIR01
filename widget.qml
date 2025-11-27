@@ -44,6 +44,36 @@ Rectangle {
         }
         return type
     }
+    function getPowerLabel() {
+        let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+        if (sweepType === "POW") {
+            return "Частота (кГц)"
+        } else {
+            return "Мощность (дБм)"
+        }
+    }
+
+
+    function getPowerPlaceholder() {
+        let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+        if (sweepType === "POW") {
+            return "100000"
+        } else {
+            return "0"
+        }
+    }
+
+
+    function getCurrentPowerValue() {
+        let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+        if (sweepType === "POW") {
+
+            return parseInt(powerBandInput.text || "100000")
+        } else {
+
+            return parseFloat(powerBandInput.text || "0")
+        }
+    }
     ListModel {id: graphModel}
 
     Rectangle {
@@ -517,21 +547,26 @@ Rectangle {
         }
         onClicked: {
             if (!running) {
-
                 if (startFreqInput.text === "") startFreqInput.text = "100"
                 if (stopFreqInput.text === "") stopFreqInput.text = "4800000"
                 if (numberOfPointsInput.text === "") numberOfPointsInput.text = "201"
                 if (freqBandInput.text === "") freqBandInput.text = "10000"
                 if (numberOf_IP_Input.text === "") numberOf_IP_Input.text = "127.0.0.1"
                 if (numberOfPortInput.text === "") numberOfPortInput.text = "5025"
-                if (powerBandInput.text === "") powerBandInput.text = "0"
-
+                if (powerBandInput.text === "") powerBandInput.text = getPowerPlaceholder()
+                let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+                let powerValue, frequencyValue
+                if (sweepType === "POW") {
+                    frequencyValue = parseInt(powerBandInput.text)
+                    powerValue = 0  // или другое значение по умолчанию
+                } else {
+                    powerValue = parseFloat(powerBandInput.text)
+                    frequencyValue = 2400000  // значение по умолчанию для частоты
+                }
+                if (isNaN(powerValue)) powerValue = 0
+                if (isNaN(frequencyValue)) frequencyValue = 100000
                 running = true
                 isRunning = true
-                console.log("Попытка подключения к IP:", numberOf_IP_Input.text,
-                                "Порт:", numberOfPortInput.text,
-                                "Начальная частота:", startFreqInput.text,
-                                "Конечная частота:", stopFreqInput.text);
                 if (mainWidget) {
                     mainWidget.startScanFromQml(numberOf_IP_Input.text,
                                                 parseInt(numberOfPortInput.text),
@@ -539,7 +574,8 @@ Rectangle {
                                                 parseInt(stopFreqInput.text),
                                                 parseInt(numberOfPointsInput.text),
                                                 parseInt(freqBandInput.text),
-                                                parseFloat(powerBandInput.text))
+                                                powerValue,
+                                                frequencyValue)
                     notifyC()
                 }
             } else {
@@ -716,41 +752,68 @@ Rectangle {
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
+
             onTextChanged: {
                 if (readOnly) return
-                    let clean = text.replace(/[^0-9]/g, "")
-                if (clean.length > 5) clean = clean.slice(0,5)
+
+                let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+                let clean
+
+                if (sweepType === "POW") {
+
+                    clean = text.replace(/[^0-9]/g, "")
+                    if (clean.length > 7) clean = clean.slice(0,7)
+                } else {
+
+                    clean = text.replace(/[^0-9.-]/g, "")
+                    if (clean.length > 5) clean = clean.slice(0,5)
+                }
+
                 if (clean !== text) text = clean
             }
+
             Text {
                 visible: powerBandInput.text.length === 0 && !powerBandInput.activeFocus
                 color: Qt.rgba(0.87, 0.87, 0.87, 0.1)
-                text: "0"
+                text: getPowerPlaceholder()
                 font.pixelSize: 16
                 anchors.centerIn: parent
             }
+
             Keys.onReturnPressed: {
-                let value = parseInt(text)
-                if (isNaN(value) || text === "") value = 0
-                else if (value < -60) value = -60
-                else if (value > 15) value = 15
+                let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+                let value
+
+                if (sweepType === "POW") {
+                    value = parseInt(text)
+                    if (isNaN(value) || text === "") value = 100000
+                    else if (value < 100) value = 100
+                    else if (value > 4800000) value = 4800000
+                } else {
+                    // Валидация для мощности
+                    value = parseFloat(text)
+                    if (isNaN(value) || text === "") value = 0
+                    else if (value < -60) value = -60
+                    else if (value > 15) value = 15
+                }
+
                 text = value.toString()
                 focus = false
-
             }
         }
     }
-//тип сканирования
+
     Text {
+        id: powerLabel
         color: "#666666"
-        text: "Мощность (дБ)"
+        text: getPowerLabel()
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.leftMargin: 211
         anchors.topMargin: 489
         font.pixelSize: 10
     }
-
+//тип сканирования
     ComboBox {
         id: stimCombo
         x: 310
@@ -820,7 +883,11 @@ Rectangle {
             }
         }
         onCurrentIndexChanged: {
-               notifyC()
+            let sweepType = getSweepTypeFromCombo(currentIndex)
+                   console.log("Тип сканирования изменен на:", sweepType)
+                   powerLabel.text = getPowerLabel()
+                   powerBandInput.text = ""
+                   notifyC()
            }
     }
     // Функция уведомления C++
