@@ -11,357 +11,357 @@ Rectangle {
     color: "#1e1e1e"
     property bool isRunning: false
 
-    // property var graphColors: [
-    //     "#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#5ac8fa", "#007aff", "#5856d6", "#af52de",
-    //     "#ff2d55", "#a2845e", "#ff9f0a", "#32ade6", "#bf5af2", "#64d2ff", "#30d158", "#ff375f"
-    // ]
+    //типы измерений
+    property var measurementTypes: [
+        "S11", "S12", "S21", "S22", "A(1)", "B(1)", "A(2)", "B(2)", "R1(1)", "R1(2)", "R2(1)", "R2(2)"
+    ]
 
-    // Две модели для единиц измерений
-    property var standardUnits: [
+    // Единицы измерений
+    property var measurementUnits: [
         "Амп.лог", "КСВН", "Фаза", "Фаза>180", "ГВЗ",
         "Амп лин", "Реал", "Мним"
     ]
 
-    property var powerUnits: [
-        "A", "B"
-    ]
+    function getPortFromType(type) {
+        if (type.endsWith("(1)")) return 1
+        if (type.endsWith("(2)")) return 2
+        return 0
+    }
+    function getSweepTypeFromCombo(comboIndex) {
+        switch(comboIndex) {
+            case 0: return "LIN"  // Лин → LINear
+            case 1: return "LOG"  // Лог → LOGarithmic
+            case 2: return "SEGM" // Сегм → SEGMent
+            case 3: return "POW"  // Мощн → POWer
+            default: return "LIN"
+        }
+    }
 
+    function getCleanType(type) {
 
-
-    ListModel { id: graphModel }
-
-
-    // function getNextColor() {
-    //     for (let c of graphColors)
-    //         if (usedColors.indexOf(c) === -1) {
-    //             usedColors.push(c)
-    //             return c
-    //         }
-    //     return graphColors[Math.floor(Math.random() * graphColors.length)]
-    // }
-
-    // function releaseColor(color) {
-    //     let i = usedColors.indexOf(color)
-    //     if (i !== -1)
-    //         usedColors.splice(i, 1)
-    // }
+        if (type.endsWith("(1)") || type.endsWith("(2)")) {
+            return type.substring(0, type.length - 3)
+        }
+        return type
+    }
+    ListModel {id: graphModel}
 
     Rectangle {
-           id: comboBoxField
-           width: 420
-           height: 40
-           radius: 6
-           color: "#2e2e2e"
-           border.color: "#555"
-           anchors.horizontalCenter: parent.horizontalCenter
-           anchors.top: parent.top
-           anchors.topMargin: 34
-           anchors.horizontalCenterOffset: 0
+        id: comboBoxField
+        width: 420
+        height: 40
+        radius: 6
+        color: "#2e2e2e"
+        border.color: "#555"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 34
+        anchors.horizontalCenterOffset: 0
 
-           Text {
-               anchors.centerIn: parent
-               text: "Графики (" + graphModel.count + ")"
-               color: "#e0e0e0"
-               font.family: "Consolas"
-               font.pixelSize: 16
-           }
+        Text {
+            anchors.centerIn: parent
+            text: "Графики (" + graphModel.count + ")"
+            color: "#e0e0e0"
+            font.family: "Consolas"
+            font.pixelSize: 16
 
-           MouseArea {
-               anchors.fill: parent
-               anchors.leftMargin: -2
-               anchors.rightMargin: 2
-               anchors.topMargin: 1
-               anchors.bottomMargin: -1
-               onClicked: {
-                   if (popup.visible) {
-                       popup.forceClose = true
-                       popup.close()
-                       popup.forceClose = false
-                   } else {
-                       popup.open()
-                   }
-               }
-           }
-       }
+        }
 
-       Popup {
-           id: popup
-           width: comboBoxField.width
-           x: comboBoxField.x
-           y: comboBoxField.y + comboBoxField.height
-           focus: true
-           closePolicy: popup.NoAutoClose
-           property bool forceClose: false
-           onClosed: {
-               if (!forceClose) popup.open()
-           }
-           Component.onCompleted: {
-               Qt.callLater(function() {
-                   popup.open()
-               })
-           }
-           background: Rectangle {
-               radius: 6
-               color: "#202020"
-               border.color: "#555"
-           }
+        MouseArea {
+            anchors.fill: parent
+            anchors.leftMargin: -2
+            anchors.rightMargin: 2
+            anchors.topMargin: 1
+            anchors.bottomMargin: -1
+            onClicked: {
+                if (popup.visible) {
+                    popup.forceClose = true
+                    popup.close()
+                    popup.forceClose = false
+                } else {
+                    popup.open()
+                }
+            }
+        }
+    }
 
-           ColumnLayout {
-               anchors.fill: parent
-               spacing: 2
-               anchors.margins: 6
+    Popup {
+        id: popup
+        width: comboBoxField.width
+        x: comboBoxField.x
+        y: comboBoxField.y + comboBoxField.height
+        focus: true
+        closePolicy: popup.NoAutoClose
+        property bool forceClose: false
+        onClosed: {
+            if (!forceClose) popup.open()
+        }
+        Component.onCompleted: {
+            Qt.callLater(function() {
+                popup.open()
+            })
+        }
+        background: Rectangle {
+            radius: 6
+            color: "#202020"
+            border.color: "#555"
+        }
 
-               ListView {
-                   id: listView
-                   model: graphModel
-                   Layout.fillWidth: true
-                   Layout.preferredHeight: 250
-                   clip: true
-                   spacing: 4
-                   boundsBehavior: Flickable.StopAtBounds
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 2
+            anchors.margins: 6
 
-                   delegate: Rectangle {
-                       id: delegateItem
-                       width: parent.width
-                       height: 34
-                       color: hovered ? "#333333" : "#282828"
-                       property bool hovered: false
-                       property int oldTypeIndex: model.typeIndex
+            ListView {
+                id: listView
+                model: graphModel
+                Layout.fillWidth: true
+                Layout.preferredHeight: 250
+                clip: true
+                spacing: 4
+                boundsBehavior: Flickable.StopAtBounds
 
-                       // Свойство для хранения текущей модели единиц
-                       property var currentUnitModel: model.typeIndex === 4 ? powerUnits : standardUnits
-                       property int unitPopupHeight: model.typeIndex === 4 ? 80 : 170
+                delegate: Rectangle {
+                    id: delegateItem
+                    width: parent.width
+                    height: 34
+                    color: hovered ? "#333333" : "#282828"
+                    property bool hovered: false
 
-                       MouseArea {
-                           anchors.fill: parent
-                           hoverEnabled: true
-                           onEntered: parent.hovered = true
-                           onExited: parent.hovered = false
-                       }
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: parent.hovered = true
+                        onExited: parent.hovered = false
+                    }
 
-                       Row {
-                           anchors.verticalCenter: parent.verticalCenter
-                           anchors.left: parent.left
-                           anchors.right: parent.right
-                           anchors.leftMargin: 15
-                           anchors.rightMargin: 5
-                           spacing: 15
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: 15
+                        anchors.rightMargin: 5
+                        spacing: 15
 
-                           Text {
-                               anchors.verticalCenter: parent.verticalCenter
-                               text: "гр" + model.num
-                               color: "#e0e0e0"
-                               font.family: "Consolas"
-                               font.pixelSize: 16
-                               width: 40
-                           }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "гр" + model.num
+                            color: "#e0e0e0"
+                            font.family: "Consolas"
+                            font.pixelSize: 16
+                            width: 40
+                        }
 
-                           ComboBox {
-                               id: typeCombo
-                               width: 70
-                               height: 26
-                               model: ["S11", "S12", "S21", "S22", "Power"]
-                               currentIndex: model.typeIndex
-                               font.pixelSize: 16
-                               indicator: null
+                        // Тип измерения
+                        ComboBox {
+                            id: typeCombo
+                            width: 70
+                            height: 26
+                            model: measurementTypes
+                            currentIndex: model.typeIndex
+                            font.pixelSize: 16
+                            indicator: null
 
-                               background: Rectangle {
-                                   color: "#282828"
-                                   border.width: 0
-                                   radius: 4
-                               }
+                            background: Rectangle {
+                                color: "#282828"
+                                border.width: 0
+                                radius: 4
+                            }
 
-                               contentItem: Text {
-                                   text: typeCombo.currentText
-                                   color: "#e0e0e0"
-                                   verticalAlignment: Text.AlignVCenter
-                                   horizontalAlignment: Text.AlignHCenter
-                               }
+                            contentItem: Text {
+                                text: typeCombo.currentText
+                                color: "#e0e0e0"
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                            }
 
-                               popup: Popup {
-                                   id: popupType
-                                   y: typeCombo.height
-                                   width: typeCombo.width
-                                   height: 170
-                                   background: Rectangle {
-                                       color: "#b3282828"
-                                       radius: 4
-                                   }
-                                   contentItem: ListView {
-                                       model: typeCombo.model
-                                       width: parent.width
-                                       clip: true
-                                       delegate: ItemDelegate {
-                                           width: parent.width
-                                           background: Rectangle {
-                                               color: hovered ? "#505050" : Qt.rgba(40/255,40/255,40/255,0.7)
-                                           }
-                                           contentItem: Text {
-                                               text: modelData
-                                               color: "#e0e0e0"
-                                               horizontalAlignment: Text.AlignHCenter
-                                               verticalAlignment: Text.AlignVCenter
-                                           }
-                                           MouseArea {
-                                               anchors.fill: parent
-                                               onClicked: {
-                                                   typeCombo.currentIndex = index
-                                                   popupType.close()
-                                               }
-                                           }
-                                       }
-                                   }
-                               }
-                               onCurrentIndexChanged: {
-                                   let oldIndex = delegateItem.oldTypeIndex
+                            popup: Popup {
+                                id: popupType
+                                y: typeCombo.height
+                                width: typeCombo.width
+                                height: 170
+                                background: Rectangle {
+                                    color: "#b3282828"
+                                    radius: 4
+                                }
+                                contentItem: ListView {
+                                    model: typeCombo.model
+                                    width: parent.width
+                                    clip: true
+                                    delegate: ItemDelegate {
+                                        width: parent.width
+                                        background: Rectangle {
+                                            color: hovered ? "#505050" : Qt.rgba(40/255,40/255,40/255,0.7)
+                                        }
+                                        contentItem: Text {
+                                            text: modelData
+                                            color: "#e0e0e0"
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                typeCombo.currentIndex = index
+                                                popupType.close()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            onCurrentIndexChanged: {
+                                let originalType = measurementTypes[currentIndex]
+                                let cleanType = getCleanType(originalType)
+                                let port = getPortFromType(originalType)
 
-                                   // Обновляем тип
-                                   graphModel.setProperty(index, "typeIndex", currentIndex)
+                                graphModel.setProperty(index, "typeIndex", currentIndex)
+                                graphModel.setProperty(index, "port", port)
+                                graphModel.setProperty(index, "cleanType", cleanType)
 
-                                   // Сбрасываем единицу измерения при смене типа
-                                   if (oldIndex !== currentIndex) {
-                                       let newUnitIndex = 0 // всегда сбрасываем на первый элемент
-                                       graphModel.setProperty(index, "unitIndex", newUnitIndex)
-                                       delegateItem.oldTypeIndex = currentIndex
-                                   }
+                                console.log(`Тип: ${originalType} -> ${cleanType}, порт: ${port}`)
+                                notifyC()
+                            }
+                        }
 
-                                   notifyC()
-                               }
+                        // Единицы измерений
+                        ComboBox {
+                            id: unitCombo
+                            width: 150
+                            height: 26
+                            model: measurementUnits
+                            currentIndex: model.unitIndex
+                            font.pixelSize: 16
+                            indicator: null
 
-                               Component.onCompleted: {
-                                   delegateItem.oldTypeIndex = model.typeIndex
-                               }
-                           }
+                            background: Rectangle {
+                                color: "#282828"
+                                border.width: 0
+                                radius: 4
+                            }
 
-                           // Единицы измерений
-                           ComboBox {
-                               id: unitCombo
-                               width: 150
-                               height: 26
-                               model: delegateItem.currentUnitModel
-                               currentIndex: model.unitIndex
-                               font.pixelSize: 16
-                               indicator: null
+                            contentItem: Text {
+                                text: unitCombo.currentText
+                                color: "#e0e0e0"
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                            }
 
-                               background: Rectangle {
-                                   color: "#282828"
-                                   border.width: 0
-                                   radius: 4
-                               }
+                            popup: Popup {
+                                id: popupUnit
+                                y: unitCombo.height
+                                width: unitCombo.width
+                                height: 170
+                                background: Rectangle {
+                                    color: "#b3282828"
+                                    radius: 4
+                                }
+                                contentItem: ListView {
+                                    model: unitCombo.model
+                                    width: parent.width
+                                    clip: true
+                                    delegate: ItemDelegate {
+                                        width: parent.width
+                                        background: Rectangle {
+                                            color: hovered ? "#505050" : Qt.rgba(40/255,40/255,40/255,0.7)
+                                        }
+                                        contentItem: Text {
+                                            text: modelData
+                                            color: "#e0e0e0"
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                unitCombo.currentIndex = index
+                                                popupUnit.close()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            onCurrentIndexChanged: {
+                                graphModel.setProperty(index, "unitIndex", currentIndex)
+                                notifyC()
+                            }
+                        }
 
-                               contentItem: Text {
-                                   text: unitCombo.currentText
-                                   color: "#e0e0e0"
-                                   verticalAlignment: Text.AlignVCenter
-                                   horizontalAlignment: Text.AlignHCenter
-                               }
+                        // Кнопка удаления
+                        Rectangle {
+                            width: 22
+                            height: 22
+                            radius: 4
+                            color: "transparent"
+                            border.color: "#555"
+                            z: 999
 
-                               popup: Popup {
-                                   id: popupUnit
-                                   y: unitCombo.height
-                                   width: unitCombo.width
-                                   height: delegateItem.unitPopupHeight
-                                   background: Rectangle {
-                                       color: "#b3282828"
-                                       radius: 4
-                                   }
-                                   contentItem: ListView {
-                                       model: unitCombo.model
-                                       width: parent.width
-                                       clip: true
-                                       delegate: ItemDelegate {
-                                           width: parent.width
-                                           background: Rectangle {
-                                               color: hovered ? "#505050" : Qt.rgba(40/255,40/255,40/255,0.7)
-                                           }
-                                           contentItem: Text {
-                                               text: modelData
-                                               color: "#e0e0e0"
-                                               horizontalAlignment: Text.AlignHCenter
-                                               verticalAlignment: Text.AlignVCenter
-                                           }
-                                           MouseArea {
-                                               anchors.fill: parent
-                                               onClicked: {
-                                                   unitCombo.currentIndex = index
-                                                   popupUnit.close()
-                                               }
-                                           }
-                                       }
-                                   }
-                               }
-                               onCurrentIndexChanged: {
-                                   graphModel.setProperty(index, "unitIndex", currentIndex)
-                                   notifyC()
-                               }
-                           }
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 10
+                                height: 2
+                                color: "#fff"
+                                rotation: 45
+                            }
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 10
+                                height: 2
+                                color: "#fff"
+                                rotation: -45
+                            }
 
-                           Rectangle {
-                               width: 22
-                               height: 22
-                               radius: 4
-                               color: "transparent"
-                               border.color: "#555"
-                               z: 999
+                            MouseArea {
+                                anchors.fill: parent
+                                z: 1000
+                                preventStealing: true
+                                propagateComposedEvents: true
 
-                               Rectangle {
-                                   anchors.centerIn: parent
-                                   width: 10
-                                   height: 2
-                                   color: "#fff"
-                                   rotation: 45
-                               }
-                               Rectangle {
-                                   anchors.centerIn: parent
-                                   width: 10
-                                   height: 2
-                                   color: "#fff"
-                                   rotation: -45
-                               }
+                                onClicked: {
+                                    console.log("❌ DELETE graph", index)
+                                    graphModel.remove(index)
 
-                               MouseArea {
-                                   anchors.fill: parent
-                                   z: 1000
-                                   preventStealing: true
-                                   propagateComposedEvents: true
+                                    for (let i = 0; i < graphModel.count; ++i)
+                                        graphModel.setProperty(i, "num", i + 1)
 
-                                   onClicked: {
-                                       console.log("❌ DELETE graph", index)
+                                    notifyC()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-                                       // releaseColor(model.color)
-                                       graphModel.remove(index)
+            // Кнопка добавления графика
+            Button {
+                text: "+ Добавить график"
+                Layout.fillWidth: true
+                height: 34
+                font.pixelSize: 14
+                background: Rectangle {
+                    color: "#6a9794"
+                    radius: 4
+                    border.color: "#666"
+                }
+                onClicked: {
+                    if (graphModel.count < 16) {
+                        let typeIndex = 0
+                        let originalType = measurementTypes[typeIndex]
+                        let cleanType = getCleanType(originalType)
+                        let port = getPortFromType(originalType)
 
-                                       for (let i = 0; i < graphModel.count; ++i)
-                                           graphModel.setProperty(i, "num", i + 1)
-
-                                       notifyC()
-                                   }
-                               }
-                           }
-                       }
-                   }
-               }
-
-               // Кнопка добавления графика
-               Button {
-                   text: "+ Добавить график"
-                   Layout.fillWidth: true
-                   height: 34
-                   font.pixelSize: 14
-                   background: Rectangle {
-                       color: "#6a9794"
-                       radius: 4
-                       border.color: "#666"
-                   }
-                   onClicked: {
-                       if (graphModel.count < 16) {
-                           graphModel.append({ num: graphModel.count + 1, typeIndex: 0, unitIndex: 0 })
-                           notifyC()
-                       }
-                   }
-               }
-           }
-       }
+                        graphModel.append({
+                            num: graphModel.count + 1,
+                            typeIndex: typeIndex,
+                            unitIndex: 0,
+                            port: port,
+                            cleanType: cleanType
+                        })
+                        notifyC()
+                    }
+                }
+            }
+        }
+    }
     // 🟢 Глобальная зона кликов
     MouseArea {
         id: unfocusArea
@@ -403,7 +403,7 @@ Rectangle {
                 focus = false
                 console.log("✅ Начальная частота:", text)
             }
-            Text { text: "20"; color: Qt.rgba(0.87, 0.87, 0.87, 0.1); anchors.centerIn: parent; visible: startFreqInput.text.length === 0 && !startFreqInput.activeFocus; font.pixelSize: 16 }
+            Text { text: "100"; color: Qt.rgba(0.87, 0.87, 0.87, 0.1); anchors.centerIn: parent; visible: startFreqInput.text.length === 0 && !startFreqInput.activeFocus; font.pixelSize: 16 }
         }
     }
 
@@ -495,51 +495,6 @@ Rectangle {
         }
     }
 
-    // Кнопка включения/выключения отображения мощности
-    Button {
-         id: powerModeButton
-         x: -170; y: 392
-         width: 120
-         height: 36
-         text: "Power Measure"
-         font.pixelSize: 14
-         checkable: true
-
-         contentItem: Text {
-             anchors.centerIn: parent
-             text: powerModeButton.checked ? "Stop Power" : "Measure Power"
-             color: powerModeButton.checked ? "#ffffff" : "#1e1e1e"
-             font.pixelSize: 12
-             font.bold: true
-             horizontalAlignment: Text.AlignHCenter
-             wrapMode: Text.Wrap
-         }
-
-         background: Rectangle {
-             radius: 6
-             border.color: "#555"
-             color: powerModeButton.checked ? "#ff9500" : "#d9d9d9"
-             Behavior on color { ColorAnimation { duration: 250 } }
-         }
-
-         onClicked: {
-             if (checked) {
-                 console.log("🟠 Activating power measurement mode");
-                 if (mainWidget) {
-                     mainWidget.setPowerMeasuringMode(true);
-                 }
-                 // Делаем кнопку Start/Stop неактивной в режиме мощности
-                 startStopButton.enabled = false;
-             } else {
-                 console.log("🔵 Deactivating power measurement mode");
-                 if (mainWidget) {
-                     mainWidget.setPowerMeasuringMode(false);
-                 }
-                 // Восстанавливаем активность кнопки Start/Stop
-                 startStopButton.enabled = true;
-             }
-         }
-     }
     // Кнопка Start/Stop
     Button {
         id: startStopButton
@@ -563,13 +518,14 @@ Rectangle {
         onClicked: {
             if (!running) {
 
-                if (startFreqInput.text === "") startFreqInput.text = "20"
+                if (startFreqInput.text === "") startFreqInput.text = "100"
                 if (stopFreqInput.text === "") stopFreqInput.text = "4800000"
                 if (numberOfPointsInput.text === "") numberOfPointsInput.text = "201"
                 if (freqBandInput.text === "") freqBandInput.text = "10000"
                 if (numberOf_IP_Input.text === "") numberOf_IP_Input.text = "127.0.0.1"
                 if (numberOfPortInput.text === "") numberOfPortInput.text = "5025"
                 if (powerBandInput.text === "") powerBandInput.text = "0"
+
                 running = true
                 isRunning = true
                 console.log("Попытка подключения к IP:", numberOf_IP_Input.text,
@@ -577,14 +533,13 @@ Rectangle {
                                 "Начальная частота:", startFreqInput.text,
                                 "Конечная частота:", stopFreqInput.text);
                 if (mainWidget) {
-                    mainWidget.startScanFromQml(
-                                numberOf_IP_Input.text,
-                                parseInt(numberOfPortInput.text),
-                                parseInt(startFreqInput.text),
-                                parseInt(stopFreqInput.text),
-                                parseInt(numberOfPointsInput.text),
-                                parseInt(freqBandInput.text)
-                                )
+                    mainWidget.startScanFromQml(numberOf_IP_Input.text,
+                                                parseInt(numberOfPortInput.text),
+                                                parseInt(startFreqInput.text),
+                                                parseInt(stopFreqInput.text),
+                                                parseInt(numberOfPointsInput.text),
+                                                parseInt(freqBandInput.text),
+                                                parseFloat(powerBandInput.text))
                     notifyC()
                 }
             } else {
@@ -592,9 +547,6 @@ Rectangle {
                 isRunning = false
                 if (vnaClient) {
                     vnaClient.stopScan()
-                }
-                if (mainWidget) {
-                    mainWidget.forceDataSync();
                 }
             }
         }
@@ -784,11 +736,11 @@ Rectangle {
                 else if (value > 15) value = 15
                 text = value.toString()
                 focus = false
-                console.log("✅ Полоса ПЧ:", text)
+
             }
         }
     }
-
+//тип сканирования
     Text {
         color: "#666666"
         text: "Мощность (дБ)"
@@ -867,6 +819,9 @@ Rectangle {
                 }
             }
         }
+        onCurrentIndexChanged: {
+               notifyC()
+           }
     }
     // Функция уведомления C++
     function notifyC() {
@@ -874,29 +829,35 @@ Rectangle {
             let info = []
             for (let i = 0; i < graphModel.count; ++i) {
                 let g = graphModel.get(i)
-                let type = ["S11","S12","S21","S22"][g.typeIndex]
-                let unit = [
-                    "Амп.лог","КСВН","Фаза","Фаза>180","ГВЗ",
-                    "Амп лин","Реал","Мним"
-                ][g.unitIndex]
+                let originalType = measurementTypes[g.typeIndex]
+                let cleanType = getCleanType(originalType)
+                let unit = measurementUnits[g.unitIndex]
+                let port = getPortFromType(originalType)
 
                 info.push({
                     num: g.num,
-                    type: type,
-                    unit: unit
+                    type: cleanType,    // передаем без скобок: "A", "B", "R1", "R2"
+                    unit: unit,
+                    port: port          // передаем порт: 1 или 2
                 })
 
-                console.log(`График #${g.num} → ${type} — ${unit}`)
+                console.log(`График #${g.num} → ${cleanType} — ${unit} [Порт: ${port}]`)
             }
+
+            // Получаем тип сканирования из ComboBox
+            let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
+
             let params = {
                 startFreq: parseInt(startFreqInput.text),
                 stopFreq: parseInt(stopFreqInput.text),
                 numberOfPoints: parseInt(numberOfPointsInput.text),
-                freqBand: parseInt(freqBandInput.text)
+                freqBand: parseInt(freqBandInput.text),
+                sweepType: sweepType  // добавляем тип сканирования
             }
 
-            console.log("Отправка настроек графиков в C++...")
-            if (mainWidget) {mainWidget.applyGraphSettings(info, params)
+            console.log("Отправка настроек графиков в C++... Тип сканирования:", sweepType)
+            if (mainWidget) {
+                mainWidget.applyGraphSettings(info, params)
             }
         })
     }

@@ -133,12 +133,6 @@ public:
     QVector<qreal> parseResponse(const QString& data) const override;
 };
 
-class SOURCE_POWER_COUPLE : public VNAcomand
-{
-public:
-    SOURCE_POWER_COUPLE(int channel, bool couple)
-        : VNAcomand(false, 0, QString("SOURce%1:POWer:PORT:COUPle %2\n").arg(channel).arg(couple ? "ON" : "OFF")) {}
-};
 
 class SOURCE_POWER_LEVEL_SET : public VNAcomand
 {
@@ -207,4 +201,35 @@ public:
         : VNAcomand(false, ch, QString("INITiate%1:CONTinuous %2\n").arg(ch).arg(on ? "ON" : "OFF")) {}
 };
 
+class CALC_PARAMETER_SPORT : public VNAcomand_REAL
+{
+public:
+    CALC_PARAMETER_SPORT(int traceNum, int port)
+        : VNAcomand_REAL(false, 0, QString("CALC1:PAR%1:SPOR %2\n").arg(traceNum).arg(port)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SOURCE_POWER_LEVEL : public VNAcomand_REAL
+{
+public:
+    SOURCE_POWER_LEVEL(int channel, double powerDbM)
+        : VNAcomand_REAL(false, 0, QString("SOURce%1:POWer:LEVel:IMMediate:AMPLitude %2\n").arg(channel).arg(powerDbM)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SENSE_SWEEP_TYPE : public VNAcomand_REAL
+{
+public:
+    SENSE_SWEEP_TYPE(int channel, const QString& sweepType)
+        : VNAcomand_REAL(false, 0, QString("SENSe%1:SWEep:TYPE %2\n").arg(channel).arg(sweepType)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SOURCE_POWER_SPAN : public VNAcomand_REAL
+{
+public:
+    SOURCE_POWER_SPAN(int channel, double powerSpan)
+        : VNAcomand_REAL(false, 0, QString("SOURce%1:POWer:SPAN %2\n").arg(channel).arg(powerSpan)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
 #endif // VNACOMAND_H

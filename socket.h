@@ -19,10 +19,7 @@ public:
     ~Socket();
 
     VNAclient* getInstance() override;
-
-    // установить таймауты (ms)
     void setTimeouts(int normalTimeoutMs, int opcTimeoutMs, int fdatIntervalMs);
-
     void startThread();
     void stopThread();
     void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) override;
@@ -30,16 +27,13 @@ public:
 
 public slots:
     void sendCommand(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands) override;
-    void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band) override;
+    void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM) override;
     void stopScan() override;
-    void startPowerMeasurement(int startKHz, int stopKHz, int points, int band);
-    void stopPowerMeasurement();
 
 private slots:
-    // инициализация и очистка выполняются в thread
     void initializeInThread();
-    void cleanupInThread();        // вызывается при finished()
-    void stopInThread();           // вызывается синхронно из stopThread()
+    void cleanupInThread();
+    void stopInThread();
     void onConnected();
     void onDisconnected();
     void requestFDAT();
@@ -55,18 +49,12 @@ private:
     QThread* _thread;
 
     bool _scanning;
-    bool _powerMeasuring;
     int _currentGraphCount;
     QVector<int> _activeTraceNumbers;
 
     int _normalTimeout;
     int _opcTimeout;
     int _fdatInterval;
-
-    int _powerStartKHz;
-    int _powerStopKHz;
-    int _powerPoints;
-    int _powerBand;
 
     QHostAddress _host;
     quint16 _port;
