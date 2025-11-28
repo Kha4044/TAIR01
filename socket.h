@@ -1,12 +1,13 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
-#include <QObject>
+#include "vnaclient.h"
+#include "vnacomand.h"
 #include <QTcpSocket>
 #include <QTimer>
 #include <QThread>
+#include <QVector>
 #include <QHostAddress>
-#include "vnaclient.h"
 
 class Socket : public VNAclient
 {
@@ -14,59 +15,48 @@ class Socket : public VNAclient
 
 public:
     explicit Socket(QObject* parent = nullptr);
-    ~Socket() override;
-
-    void startThread();
-    void stopThread();
-    bool isRunning() const { return _thread && _thread->isRunning(); }
+    ~Socket();
 
     VNAclient* getInstance() override;
+    void setTimeouts(int normalTimeoutMs, int opcTimeoutMs, int fdatIntervalMs);
+    void startThread();
+    void stopThread();
+    void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) override;
+    bool canConnect(const QString &ip, quint16 port);
 
 public slots:
-    void startScan(const QString& ip, quint16 port,
-                   int startKHz, int stopKHz, int points, int band);
-
+    void sendCommand(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands) override;
+    void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM, int powerFreqKHz) override;
     void stopScan() override;
-
-    void sendCommand(const QHostAddress& host, quint16 port,
-                     const QVector<VNAcomand*>& commands) override;
-
-    void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) override;
-
-    void requestFDAT() override;
-
-    void startPowerMeasurement(int startKHz, int stopKHz, int points, int band);
-    void stopPowerMeasurement();
 
 private slots:
     void initializeInThread();
     void cleanupInThread();
+    void stopInThread();
     void onConnected();
     void onDisconnected();
+    void requestFDAT();
 
 private:
+    void sendCommandImpl(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands);
+    bool ensureConnection(const QHostAddress& host, quint16 port);
+    bool waitForOperationsComplete(int timeoutMs);
+    void sendCommandWithOPC(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands);
+
     QTcpSocket* _socket;
     QTimer* _fdatTimer;
+    QThread* _thread;
+
     bool _scanning;
-    bool _powerMeasuring;
-
-    QHostAddress _host;
-    quint16 _port;
-    int _lastType;
-
     int _currentGraphCount;
     QVector<int> _activeTraceNumbers;
 
-    int _powerStartKHz;
-    int _powerStopKHz;
-    int _powerPoints;
-    int _powerBand;
+    int _normalTimeout;
+    int _opcTimeout;
+    int _fdatInterval;
 
-    QThread* _thread;
-
-    void sendCommandImpl(const QHostAddress& hostName, quint16 port,
-                         const QVector<VNAcomand*>& commands);
-
+    QHostAddress _host;
+    quint16 _port;
 };
 
 #endif // SOCKET_H

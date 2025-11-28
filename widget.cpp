@@ -7,21 +7,20 @@
 #include <QThread>
 #include <QMessageBox>
 #include <QChartView>
-#include <QRandomGenerator>
-#include <QtMath>
+#include <QApplication>
 
 static QString unitToScpi(const QString& unit)
 {
     static QHash<QString, QString> unitMap = {
-        {"Амп.лог", "MLOG"},
-        {"КСВН", "SWR"},
-        {"Фаза", "PHAS"},
-        {"Фаза>180", "UPHase"},
-        {"ГВЗ", "GDEL"},
-        {"Амп лин", "MLIN"},
-        {"Реал", "REAL"},
-        {"Мним", "IMAG"}
-    };
+                                              {"Амп.лог", "MLOG"},
+                                              {"КСВН", "SWR"},
+                                              {"Фаза", "PHAS"},
+                                              {"Фаза>180", "UPHase"},
+                                              {"ГВЗ", "GDEL"},
+                                              {"Амп лин", "MLIN"},
+                                              {"Реал", "REAL"},
+                                              {"Мним", "IMAG"},
+                                              };
     return unitMap.value(unit, "MLOG");
 }
 
@@ -30,33 +29,32 @@ Widget::Widget(VNAclient* client, QWidget* parent)
     , _vnaClient(client)
     , _chartManager(nullptr)
     , _chartView(nullptr)
-    , _powerMeasuringMode(false)
+    , _currentIP("127.0.0.1")
+    , _currentPort(5025)
+    , _currentStartKHz(20)
+    , _currentStopKHz(4800000)
+    , _currentPoints(201)
+    , _currentBand(10000)
+    , _currentPowerDbM(0.0)
+    , _currentPowerFreqKHz(100000)
 {
     _chartManager = new CreaterChart(this);
     setupUi();
+
     qRegisterMetaType<QVector<VNAcomand*>>();
     qRegisterMetaType<QHostAddress>();
-    qRegisterMetaType<QAbstractSocket::SocketError>();
-    connect(_vnaClient, &VNAclient::dataFromVNA,
-            this, &Widget::dataFromVNA, Qt::QueuedConnection);
-    connect(_vnaClient, &VNAclient::error,
-            this, &Widget::errorMessage, Qt::QueuedConnection);
 
+    connect(_vnaClient, &VNAclient::dataFromVNA, this, &Widget::dataFromVNA, Qt::QueuedConnection);
+    connect(_vnaClient, &VNAclient::error, this, &Widget::errorMessage, Qt::QueuedConnection);
+
+    setOptimalScanSettings();
     startSocketThread();
-
-    QTimer::singleShot(1000, this, &Widget::addTestData);
 }
 
 Widget::~Widget()
 {
     stopSocketThread();
-
     if (_vnaClient) {
-        qDebug() << "Остановка клиента VNA...";
-        if (_powerMeasuringMode) {
-            cleanupPowerMeasurement();
-        }
-
         QMetaObject::invokeMethod(_vnaClient, "stopScan", Qt::BlockingQueuedConnection);
     }
 }
@@ -65,185 +63,146 @@ void Widget::setupUi()
 {
     QHBoxLayout* lay = new QHBoxLayout(this);
     QQuickWidget* qw = new QQuickWidget(this);
-
     qw->rootContext()->setContextProperty("mainWidget", this);
     qw->rootContext()->setContextProperty("vnaClient", _vnaClient);
     qw->setSource(QUrl(QStringLiteral("qrc:/widget.qml")));
     qw->setResizeMode(QQuickWidget::SizeRootObjectToView);
-
     qw->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     qw->setMinimumWidth(435);
     qw->setMaximumWidth(435);
-
     _chartManager->setupAxes("Frequency (kHz)", "Amplitude");
-
     _chartView = new QChartView(_chartManager->getChart());
     _chartView->setMinimumSize(800, 640);
     _chartView->setRenderHint(QPainter::Antialiasing);
-
     lay->setContentsMargins(0, 0, 0, 0);
     lay->addWidget(qw, 2);
     lay->addWidget(_chartView, 4);
 }
 
-void Widget::addTestData()
+void Widget::setOptimalScanSettings()
 {
-    _chartManager->addTrace(99, "Test Line", Qt::red);
-
-    QVector<qreal> xData = {0, 10, 20, 30, 40, 50};
-    QVector<qreal> yData = {10, 25, 15, 30, 20, 35};
-
-    _chartManager->updateTraceData(99, xData, yData);
-    _chartManager->autoScaleAxes();
-    _chartView->update();
+    Socket* socket = qobject_cast<Socket*>(_vnaClient);
+    if (socket) {
+        socket->setTimeouts(20000, 60000, 2000);
+    }
 }
 
-void Widget::requestFrequencyData()
+void Widget::startScanFromQml(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM, int powerFreqKHz)
 {
     if (!_vnaClient) return;
 
-    Socket* sock = qobject_cast<Socket*>(_vnaClient);
-    if (!sock) return;
-
-    int firstTraceNum = 1;
-    QVector<VNAcomand*> cmds;
-    cmds.append(new CALC_TRACE_DATA_XAXIS(firstTraceNum));
-
-    QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
-                              Q_ARG(QHostAddress, sock->_host),
-                              Q_ARG(quint16, sock->_port),
-                              Q_ARG(QVector<VNAcomand*>, cmds));
-}
-
-void Widget::startScanFromQml(const QString& ip, quint16 port,
-                              int startKHz, int stopKHz, int points, int band)
-{
-    qDebug() << "Widget::startScanFromQml called with"
-             << "ip=" << ip << "port=" << port
-             << "startKHz=" << startKHz << "stopKHz=" << stopKHz
-             << "points=" << points << "band=" << band;
-
-    if (!_vnaClient) {
-        qWarning() << "VNA client not set";
-        return;
-    }
-
     QHostAddress addr;
     if (!addr.setAddress(ip)) {
-        QString msg = QString("Invalid IP address: '%1'").arg(ip);
-        qWarning() << msg;
-        QMessageBox::warning(this, "Invalid IP", msg);
+        showIpPortError(QString("Некорректный IP: %1").arg(ip));
         return;
     }
 
-    if (port == 0 || port > 65535) {
-        QString msg = QString("Invalid port: %1. Allowed range 1..65535").arg(port);
-        qWarning() << msg;
-        QMessageBox::warning(this, "Invalid Port", msg);
+    if (port < 1 || port > 65535) {
+        showIpPortError(QString("Некорректный порт: %1").arg(port));
         return;
     }
 
-    bool invoked = QMetaObject::invokeMethod(_vnaClient, "startScan", Qt::QueuedConnection,
-                                             Q_ARG(QString, ip),
-                                             Q_ARG(quint16, port),
-                                             Q_ARG(int, startKHz),
-                                             Q_ARG(int, stopKHz),
-                                             Q_ARG(int, points),
-                                             Q_ARG(int, band));
-    if (!invoked) {
-        qWarning() << "Failed to invoke startScan on VNA client";
-    } else {
-        qDebug() << "startScan invoked on VNA client (queued)";
+    _currentIP = ip;
+    _currentPort = port;
+    _currentStartKHz = startKHz;
+    _currentStopKHz = stopKHz;
+    _currentPoints = points;
+    _currentBand = band;
+    _currentPowerDbM = powerDbM;
+    _currentPowerFreqKHz = powerFreqKHz;
+
+    Socket* socket = qobject_cast<Socket*>(_vnaClient);
+    if (socket && !socket->canConnect(ip, port)) {
+        showIpPortError("Прибор недоступен по указанному IP/порт");
+        return;
     }
+
+    QMetaObject::invokeMethod(
+        _vnaClient, "startScan", Qt::QueuedConnection,
+        Q_ARG(QString, ip),
+        Q_ARG(quint16, port),
+        Q_ARG(int, startKHz),
+        Q_ARG(int, stopKHz),
+        Q_ARG(int, points),
+        Q_ARG(int, band),
+        Q_ARG(double, powerDbM),
+        Q_ARG(int, powerFreqKHz)
+        );
 }
 
-void Widget::stopScanFromQml()
+void Widget::stopScanFromQml(const QString& ip, int port)
 {
+    Q_UNUSED(ip)
+    Q_UNUSED(port)
     if (!_vnaClient) return;
     QMetaObject::invokeMethod(_vnaClient, "stopScan", Qt::QueuedConnection);
 }
 
 void Widget::applyGraphSettings(const QVariantList& graphs, const QVariantMap& params)
 {
-    QString ip = params.value("ip").toString();
-    quint16 port = params.value("port").toUInt();
+    QString sweepType = params.value("sweepType").toString();
 
-    QHostAddress addr;
-    if (!addr.setAddress(ip)) {
-        QMessageBox::warning(this, "Invalid IP",
-                             QString("IP address '%1' is invalid.").arg(ip));
-        return;
-    }
-
-    if (port == 0 || port > 65535) {
-        QMessageBox::warning(this, "Invalid Port",
-                             QString("Port '%1' is invalid. Valid range: 1–65535").arg(port));
-        return;
-    }
-
-    if (_powerMeasuringMode)
-    {
-        QMessageBox::information(this, "Information",
-                                 "Please exit power measurement mode first to change graph settings.");
-        return;
-    }
+    qDebug() << "Applying graph settings with sweep type:" << sweepType;
 
     _chartManager->clearAllTraces();
-
     QVector<VNAcomand*> cmds;
     QVector<int> traceNumbers;
-
     int graphCount = graphs.size();
+    cmds.append(new SENSE_SWEEP_TYPE(1, sweepType));
+    if (sweepType == "POW") {
+        qint64 powerFreqHz = qint64(_currentPowerFreqKHz) * 1000LL;
+        cmds.append(new SENS_FREQ_FIXED(1, powerFreqHz));
+    }
+
     cmds.append(new CALC_PARAMETER_COUNT(graphCount));
 
-    for (const QVariant& v : graphs)
-    {
+    for (const QVariant& v : graphs) {
         QVariantMap g = v.toMap();
         int num = g.value("num").toInt();
         QString type = g.value("type").toString();
         QString unit = g.value("unit").toString();
-
+        int port = g.value("port", 0).toInt();
         QString scpiUnit = unitToScpi(unit);
 
         QColor traceColor = QColor::fromHsv((num * 40) % 360, 200, 200);
-        QString traceName = QString("Trace %1 (%2)").arg(num).arg(type);
+
+        QString traceName;
+        if (port > 0) {
+            traceName = QString("Trace %1 (%2(%3))").arg(num).arg(type).arg(port);
+        } else {
+            traceName = QString("Trace %1 (%2)").arg(num).arg(type);
+        }
+
         _chartManager->addTrace(num, traceName, traceColor);
         traceNumbers.append(num);
 
         cmds.append(new CALC_PARAMETER_DEFINE(num, type));
+
+        if (port > 0) {
+            cmds.append(new CALC_PARAMETER_SPORT(num, port));
+        }
+
         cmds.append(new CALC_TRACE_SELECT(num));
         cmds.append(new CALC_TRACE_FORMAT(num, scpiUnit));
         cmds.append(new DISP_WIND_TRACE(1, num));
     }
 
-    if (_vnaClient && !cmds.isEmpty())
-    {
-        QVector<VNAcomand*> cmdsCopy = cmds;
+    cmds.append(new OPC_QUERY());
 
+    if (_vnaClient && !cmds.isEmpty()) {
+        QVector<VNAcomand*> cmdsCopy = cmds;
         QMetaObject::invokeMethod(_vnaClient, "setGraphSettings", Qt::QueuedConnection,
                                   Q_ARG(int, graphCount),
                                   Q_ARG(QVector<int>, traceNumbers));
 
-        Socket* sock = qobject_cast<Socket*>(_vnaClient);
-        if (!sock) {
-            qDeleteAll(cmdsCopy);
-            return;
+        QHostAddress targetHost;
+        if (!_currentIP.isEmpty() && targetHost.setAddress(_currentIP)) {
+            QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
+                                      Q_ARG(QHostAddress, targetHost),
+                                      Q_ARG(quint16, _currentPort),
+                                      Q_ARG(QVector<VNAcomand*>, cmdsCopy));
         }
-
-        QMetaObject::invokeMethod(_vnaClient, "sendCommand", Qt::QueuedConnection,
-                                  Q_ARG(QHostAddress, sock->_host),
-                                  Q_ARG(quint16, sock->_port),
-                                  Q_ARG(QVector<VNAcomand*>, cmdsCopy));
-
-        if (!traceNumbers.isEmpty())
-        {
-            QTimer::singleShot(500, this, &Widget::requestFrequencyData);
-        }
-
-        cmds.clear();
-    }
-    else
-    {
+    } else {
         qDeleteAll(cmds);
     }
 }
@@ -253,7 +212,6 @@ void Widget::startSocketThread()
     Socket* socket = qobject_cast<Socket*>(_vnaClient);
     if (socket) {
         socket->startThread();
-        qDebug() << "Socket thread started";
     }
 }
 
@@ -262,190 +220,34 @@ void Widget::stopSocketThread()
     Socket* socket = qobject_cast<Socket*>(_vnaClient);
     if (socket) {
         socket->stopThread();
-        qDebug() << "Socket thread stopped";
     }
-}
-
-void Widget::setPowerMeasuringMode(bool enabled)
-{
-    if (_powerMeasuringMode == enabled)
-    {
-        return;
-    }
-
-    if (enabled)
-    {
-        int startKHz = 20;
-        int stopKHz = 4800000;
-        int points = 201;
-        int band = 10000;
-
-        setupPowerMeasurement(startKHz, stopKHz, points, band);
-    }
-    else
-    {
-        cleanupPowerMeasurement();
-    }
-}
-
-void Widget::setupPowerMeasurement(int startKHz, int stopKHz, int points, int band)
-{
-    _powerMeasuringMode = true;
-
-    stopScanFromQml();
-
-    _powerFrequencyData.clear();
-    _powerValueData.clear();
-
-    _chartManager->clearAllTraces();
-    _chartManager->setupAxes("Frequency (kHz)", "Power (dBm)");
-
-    if (_chartManager->hasTrace(1000))
-    {
-        _chartManager->removeTrace(1000);
-    }
-    _chartManager->addTrace(1000, "Source Power (dBm)", QColor("#ff9500"));
-
-    Socket* socketClient = qobject_cast<Socket*>(_vnaClient);
-    if (socketClient)
-    {
-        QMetaObject::invokeMethod(socketClient, "startPowerMeasurement", Qt::QueuedConnection,
-                                  Q_ARG(int, startKHz),
-                                  Q_ARG(int, stopKHz),
-                                  Q_ARG(int, points),
-                                  Q_ARG(int, band));
-    }
-}
-
-void Widget::cleanupPowerMeasurement()
-{
-    _powerMeasuringMode = false;
-
-    Socket* socketClient = qobject_cast<Socket*>(_vnaClient);
-    if (socketClient)
-    {
-        QMetaObject::invokeMethod(socketClient, "stopPowerMeasurement", Qt::QueuedConnection);
-    }
-
-    _powerFrequencyData.clear();
-    _powerValueData.clear();
-
-    _chartManager->clearAllTraces();
-    _chartManager->setupAxes("Frequency (kHz)", "Amplitude");
 }
 
 void Widget::dataFromVNA(const QString& data, VNAcomand* cmd)
 {
-    if (!cmd)
-    {
-        return;
-    }
-
-    if (auto* powerCmd = dynamic_cast<SOURCE_POWER_LEVEL_GET*>(cmd))
-    {
-        QVector<qreal> powerData = powerCmd->parseResponse(data);
-    }
-    else if (auto* xaxisCmd = dynamic_cast<CALC_TRACE_DATA_XAXIS*>(cmd))
-    {
-        int traceNum = xaxisCmd->type;
+    if (!cmd) return;
+    if (auto* xaxisCmd = dynamic_cast<CALC_TRACE_DATA_XAXIS*>(cmd)) {
         _frequencyData = xaxisCmd->parseResponse(data);
-    }
-    else if (auto* powerDataCmd = dynamic_cast<CALC_TRACE_DATA_POWER*>(cmd))
-    {
-        int traceNum = powerDataCmd->type;
-        QVector<qreal> powerData = powerDataCmd->parseResponse(data);
-
-        if (_powerMeasuringMode && traceNum == 1)
-        {
-            QVector<qreal> xData;
-
-            if (!_frequencyData.isEmpty() && _frequencyData.size() == powerData.size())
-            {
-                xData = _frequencyData;
-            }
-            else if (!_frequencyData.isEmpty())
-            {
-                for (int i = 0; i < powerData.size(); ++i)
-                {
-                    xData.append(i);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < powerData.size(); ++i)
-                {
-                    xData.append(i);
-                }
-            }
-
-            if (!_chartManager->hasTrace(1000))
-            {
-                _chartManager->addTrace(1000, "Source Power (dBm)", QColor("#ff9500"));
-            }
-
-            _chartManager->updateTraceData(1000, xData, powerData);
-            _chartManager->autoScaleAxes();
-            _chartView->update();
-        }
-    }
-    else if (auto* traceCmd = dynamic_cast<CALC_TRACE_DATA_FDAT*>(cmd))
-    {
-        int traceNum = traceCmd->type;
-
-        if (_powerMeasuringMode)
-        {
-            delete cmd;
-            return;
-        }
-
+    } else if (auto* traceCmd = dynamic_cast<CALC_TRACE_DATA_FDAT*>(cmd)) {
         QVector<qreal> amplitudeData = traceCmd->parseResponse(data);
-
         QVector<qreal> xData;
-
-        if (!_frequencyData.isEmpty() && _frequencyData.size() == amplitudeData.size())
-        {
+        if (!_frequencyData.isEmpty() && _frequencyData.size() == amplitudeData.size()) {
             xData = _frequencyData;
-        }
-        else
-        {
-            for (int i = 0; i < amplitudeData.size(); ++i)
-            {
+        } else {
+            for (int i = 0; i < amplitudeData.size(); ++i) {
                 xData.append(i);
             }
         }
-
-        if (!_chartManager->hasTrace(traceNum))
-        {
+        int traceNum = traceCmd->type;
+        if (!_chartManager->hasTrace(traceNum)) {
             QColor traceColor = QColor::fromHsv((traceNum * 40) % 360, 200, 200);
             _chartManager->addTrace(traceNum, QString("Trace %1").arg(traceNum), traceColor);
         }
-
         _chartManager->updateTraceData(traceNum, xData, amplitudeData);
         _chartManager->autoScaleAxes();
         _chartView->update();
     }
-
     delete cmd;
-}
-
-void Widget::forceDataSync()
-{
-    if (_powerMeasuringMode)
-    {
-        if (_chartView)
-        {
-            _chartView->update();
-        }
-    }
-    else
-    {
-        requestFrequencyData();
-
-        if (_chartView)
-        {
-            _chartView->update();
-        }
-    }
 }
 
 void Widget::errorMessage(int code, const QString& message)
@@ -455,5 +257,18 @@ void Widget::errorMessage(int code, const QString& message)
 
 void Widget::showIpPortError(const QString &msg)
 {
-    QMessageBox::warning(this, "IP/Port error", msg);
+    QMessageBox::warning(this, "IP/Port Error", msg);
+}
+
+void Widget::updateConnectionSettings(const QString& ip, quint16 port)
+{
+    if (port < 1 || port > 65535) {
+        port = 5025;
+    }
+    QHostAddress testAddr;
+    if (!testAddr.setAddress(ip) || ip.split('.').length() != 4) {
+        return;
+    }
+    _currentIP = ip;
+    _currentPort = port;
 }
