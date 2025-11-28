@@ -1,7 +1,28 @@
-"build/" 
-"*.exe"   
-"*.o" 
-"*.idx" 
-"moc_*" 
-"qrc_*" 
-".qtc_clangd/" 
+# Qt build files
+build/
+*.exe
+*.o
+*.idx
+moc_*
+qrc_*
+.qtc_clangd/
+
+# Qt Creator files
+Makefile*
+*.stash
+object_script.*
+*.qmake*
+
+# Debug/Release files
+debug/
+release/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
