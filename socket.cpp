@@ -302,7 +302,6 @@ void Socket::startScan(const QString& ip, quint16 port, int startKHz, int stopKH
     cmds.append(new SENS_FREQ_START(1, startHz));
     cmds.append(new SENS_FREQ_STOP(1, stopHz));
     cmds.append(new SENS_FREQ_FIXED(1, powerFreqHz));
-    // cmds.append(new SENS_FREQ_CW(1, powerFreqHz));
     cmds.append(new SENS_SWE_POINT(1, points));
     cmds.append(new SENS_BWID(1, bwHz));
     cmds.append(new TRIGGER_SOURCE_BUS());

@@ -3,7 +3,6 @@
 
 #include "vnaclient.h"
 #include "vnacomand.h"
-
 #include <QTcpSocket>
 #include <QTimer>
 #include <QThread>
