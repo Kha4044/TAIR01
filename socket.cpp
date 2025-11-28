@@ -264,7 +264,7 @@ void Socket::sendCommandImpl(const QHostAddress& host, quint16 port, const QVect
     }
 }
 
-void Socket::startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM)
+void Socket::startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM, int powerFreqKHz)
 {
     if (QThread::currentThread() != _thread) {
         QMetaObject::invokeMethod(this, "startScan", Qt::QueuedConnection,
@@ -274,36 +274,50 @@ void Socket::startScan(const QString& ip, quint16 port, int startKHz, int stopKH
                                   Q_ARG(int, stopKHz),
                                   Q_ARG(int, points),
                                   Q_ARG(int, band),
-                                  Q_ARG(double, powerDbM));
+                                  Q_ARG(double, powerDbM),
+                                  Q_ARG(int, powerFreqKHz));
         return;
     }
-    qDebug() << "startScan in socket thread, ip:" << ip << "port:" << port << "power:" << powerDbM << "dBm";
+
+    qDebug() << "startScan in socket thread, ip:" << ip << "port:" << port
+             << "power:" << powerDbM << "dBm, power freq:" << powerFreqKHz << "kHz";
+
     QHostAddress hostAddr;
     if (!hostAddr.setAddress(ip)) {
         emit error(-1, QString("Invalid IP: %1").arg(ip));
         return;
     }
+
     _host = hostAddr;
     _port = port;
+
     qint64 startHz = qint64(startKHz) * 1000LL;
     qint64 stopHz  = qint64(stopKHz)  * 1000LL;
     qint64 bwHz    = qint64(band);
+    qint64 powerFreqHz = qint64(powerFreqKHz) * 1000LL;
+
     QVector<VNAcomand*> cmds;
     cmds.append(new SYSTEM_PRESET());
     cmds.append(new SOURCE_POWER_LEVEL(1, powerDbM));
     cmds.append(new SENS_FREQ_START(1, startHz));
     cmds.append(new SENS_FREQ_STOP(1, stopHz));
+    cmds.append(new SENS_FREQ_FIXED(1, powerFreqHz));
+    // cmds.append(new SENS_FREQ_CW(1, powerFreqHz));
     cmds.append(new SENS_SWE_POINT(1, points));
     cmds.append(new SENS_BWID(1, bwHz));
     cmds.append(new TRIGGER_SOURCE_BUS());
     cmds.append(new INITIATE_CONTINUOUS(1));
+
     sendCommandWithOPC(_host, _port, cmds);
+
     if (!_scanning) {
         _scanning = true;
         if (_fdatTimer) _fdatTimer->start();
     }
-    qDebug() << "startScan configured with power" << powerDbM << "dBm and FDAT timer started";
+
+    qDebug() << "startScan configured with power" << powerDbM << "dBm and fixed frequency" << powerFreqKHz << "kHz";
 }
+
 void Socket::stopScan()
 {
     if (QThread::currentThread() != _thread) {

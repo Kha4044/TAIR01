@@ -57,7 +57,7 @@ Rectangle {
     function getPowerPlaceholder() {
         let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
         if (sweepType === "POW") {
-            return "100000"
+            return "100"
         } else {
             return "0"
         }
@@ -68,7 +68,7 @@ Rectangle {
         let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
         if (sweepType === "POW") {
 
-            return parseInt(powerBandInput.text || "100000")
+            return parseInt(powerBandInput.text || "100")
         } else {
 
             return parseFloat(powerBandInput.text || "0")
@@ -558,13 +558,13 @@ Rectangle {
                 let powerValue, frequencyValue
                 if (sweepType === "POW") {
                     frequencyValue = parseInt(powerBandInput.text)
-                    powerValue = 0  // или другое значение по умолчанию
+                    powerValue = 0
                 } else {
                     powerValue = parseFloat(powerBandInput.text)
-                    frequencyValue = 2400000  // значение по умолчанию для частоты
+                    frequencyValue = 100
                 }
                 if (isNaN(powerValue)) powerValue = 0
-                if (isNaN(frequencyValue)) frequencyValue = 100000
+                if (isNaN(frequencyValue)) frequencyValue = 100
                 running = true
                 isRunning = true
                 if (mainWidget) {
@@ -611,10 +611,7 @@ Rectangle {
                 let clean = text.replace(/[^0-9]/g, "")
                 if (clean.length > 4) clean = clean.slice(0,4)
                 if (clean !== text) text = clean
-                // if (mainWidget && text.length > 0) {
-                //     mainWidget.updateConnectionSettings(numberOf_IP_Input.text,
-                //                                       parseInt(numberOfPortInput.text))
-                // }
+
             }
             Text {
                 visible: numberOfPortInput.text.length === 0 && !numberOfPortInput.activeFocus
@@ -654,31 +651,25 @@ Rectangle {
             inputMethodHints: Qt.ImhDigitsOnly
 
             onTextChanged: {
-                let clean = text.replace(/[^0-9.]/g, ""); // только цифры и точки
+                let clean = text.replace(/[^0-9.]/g, "");
 
-                // Разделяем по точкам и фильтруем лишние
+
                 let parts = clean.split(".");
                 let validParts = [];
 
                 for (let i = 0; i < parts.length && i < 4; i++) {
                     let p = parts[i];
-                    // Ограничиваем каждую часть максимум 3 цифрами
+
                     if (p.length > 3) p = p.slice(0, 3);
                     validParts.push(p);
                 }
 
-                // Склеиваем обратно
-                let formatted = validParts.join(".");
 
-                // Если пользователь случайно ввёл две точки подряд — убираем лишние
+                let formatted = validParts.join(".");
                 formatted = formatted.replace(/\.{2,}/g, ".");
 
                 if (formatted !== text)
                     text = formatted;
-                // if (mainWidget && text.length > 0) {
-                //     mainWidget.updateConnectionSettings(numberOf_IP_Input.text,
-                //                                       parseInt(numberOfPortInput.text))
-                // }
             }
 
             Text {
@@ -786,11 +777,11 @@ Rectangle {
 
                 if (sweepType === "POW") {
                     value = parseInt(text)
-                    if (isNaN(value) || text === "") value = 100000
+                    if (isNaN(value) || text === "") value = 100
                     else if (value < 100) value = 100
                     else if (value > 4800000) value = 4800000
                 } else {
-                    // Валидация для мощности
+
                     value = parseFloat(text)
                     if (isNaN(value) || text === "") value = 0
                     else if (value < -60) value = -60
@@ -855,15 +846,12 @@ Rectangle {
             contentItem: ListView {
                 model: stimCombo.model
                 clip: true
-
                 delegate: ItemDelegate {
                     width: parent.width
                     height: 26
-
                     background: Rectangle {
                         color: hovered ? "#505050" : Qt.rgba(40/255,40/255,40/255,0.7)
                     }
-
                     contentItem: Text {
                         text: modelData
                         padding: 15
@@ -871,7 +859,6 @@ Rectangle {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
@@ -903,25 +890,26 @@ Rectangle {
 
                 info.push({
                     num: g.num,
-                    type: cleanType,    // передаем без скобок: "A", "B", "R1", "R2"
+                    type: cleanType,
                     unit: unit,
-                    port: port          // передаем порт: 1 или 2
+                    port: port
                 })
 
                 console.log(`График #${g.num} → ${cleanType} — ${unit} [Порт: ${port}]`)
             }
-
-            // Получаем тип сканирования из ComboBox
             let sweepType = getSweepTypeFromCombo(stimCombo.currentIndex)
-
+            let powerSpanValue = 0
+            if (sweepType === "POW") {
+                powerSpanValue = parseFloat(powerBandInput.text || "100")
+            }
             let params = {
                 startFreq: parseInt(startFreqInput.text),
                 stopFreq: parseInt(stopFreqInput.text),
                 numberOfPoints: parseInt(numberOfPointsInput.text),
                 freqBand: parseInt(freqBandInput.text),
-                sweepType: sweepType  // добавляем тип сканирования
+                sweepType: sweepType,
+                powerSpan: powerSpanValue
             }
-
             console.log("Отправка настроек графиков в C++... Тип сканирования:", sweepType)
             if (mainWidget) {
                 mainWidget.applyGraphSettings(info, params)

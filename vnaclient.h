@@ -16,7 +16,7 @@ public:
     virtual VNAclient* getInstance() = 0;
 
 public slots:
-    virtual void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM = 0.0) = 0;
+    virtual void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM, int powerFreqKHz) = 0;
     virtual void stopScan() = 0;
     virtual void sendCommand(const QHostAddress &host, quint16 port, const QVector<VNAcomand*> &commands) = 0;
     virtual void setGraphSettings(int graphCount, const QVector<int>& traceNumbers) = 0;

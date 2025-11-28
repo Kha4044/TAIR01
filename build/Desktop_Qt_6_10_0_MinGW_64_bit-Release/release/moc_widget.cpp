@@ -55,6 +55,7 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
         "points",
         "band",
         "powerDbM",
+        "powerFreqKHz",
         "stopScanFromQml",
         "applyGraphSettings",
         "QVariantList",
@@ -74,20 +75,20 @@ template <> constexpr inline auto Widget::qt_create_metaobjectdata<qt_meta_tag_Z
             { QMetaType::Int, 7 }, { QMetaType::QString, 8 },
         }}),
         // Method 'startScanFromQml'
-        QtMocHelpers::MethodData<void(const QString &, quint16, int, int, int, int, double)>(9, 2, QMC::AccessPublic, QMetaType::Void, {{
+        QtMocHelpers::MethodData<void(const QString &, quint16, int, int, int, int, double, int)>(9, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 10 }, { QMetaType::UShort, 11 }, { QMetaType::Int, 12 }, { QMetaType::Int, 13 },
-            { QMetaType::Int, 14 }, { QMetaType::Int, 15 }, { QMetaType::Double, 16 },
+            { QMetaType::Int, 14 }, { QMetaType::Int, 15 }, { QMetaType::Double, 16 }, { QMetaType::Int, 17 },
         }}),
         // Method 'stopScanFromQml'
-        QtMocHelpers::MethodData<void(const QString &, int)>(17, 2, QMC::AccessPublic, QMetaType::Void, {{
+        QtMocHelpers::MethodData<void(const QString &, int)>(18, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 10 }, { QMetaType::Int, 11 },
         }}),
         // Method 'applyGraphSettings'
-        QtMocHelpers::MethodData<void(const QVariantList &, const QVariantMap &)>(18, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 19, 20 }, { 0x80000000 | 21, 22 },
+        QtMocHelpers::MethodData<void(const QVariantList &, const QVariantMap &)>(19, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 20, 21 }, { 0x80000000 | 22, 23 },
         }}),
         // Method 'updateConnectionSettings'
-        QtMocHelpers::MethodData<void(const QString &, quint16)>(23, 2, QMC::AccessPublic, QMetaType::Void, {{
+        QtMocHelpers::MethodData<void(const QString &, quint16)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 10 }, { QMetaType::UShort, 11 },
         }}),
     };
@@ -115,7 +116,7 @@ void Widget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
         switch (_id) {
         case 0: _t->dataFromVNA((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<VNAcomand*>>(_a[2]))); break;
         case 1: _t->errorMessage((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 2: _t->startScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6])),(*reinterpret_cast<std::add_pointer_t<double>>(_a[7]))); break;
+        case 2: _t->startScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6])),(*reinterpret_cast<std::add_pointer_t<double>>(_a[7])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[8]))); break;
         case 3: _t->stopScanFromQml((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2]))); break;
         case 4: _t->applyGraphSettings((*reinterpret_cast<std::add_pointer_t<QVariantList>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QVariantMap>>(_a[2]))); break;
         case 5: _t->updateConnectionSettings((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2]))); break;

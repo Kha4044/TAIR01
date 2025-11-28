@@ -232,4 +232,29 @@ public:
         : VNAcomand_REAL(false, 0, QString("SOURce%1:POWer:SPAN %2\n").arg(channel).arg(powerSpan)) {}
     QVector<qreal> parseResponse(const QString&) const override { return {}; }
 };
+
+class SENS_FREQ_FIXED : public VNAcomand_REAL
+{
+public:
+    SENS_FREQ_FIXED(int channel, qint64 freqHz)
+        : VNAcomand_REAL(false, 0, QString("SENS:FREQ:FIXed %1\n").arg(freqHz)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+
+class SENS_FREQ_CW : public VNAcomand_REAL
+{
+public:
+    SENS_FREQ_CW(int channel, qint64 freqHz)
+        : VNAcomand_REAL(false, 0, QString("SENS:FREQ:CW %1\n").arg(freqHz)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SENS_FREQ_CENTER : public VNAcomand_REAL
+{
+public:
+    SENS_FREQ_CENTER(int channel, qint64 freqHz)
+        : VNAcomand_REAL(false, 0, QString("SENS:FREQ:CENT %1\n").arg(freqHz)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
 #endif // VNACOMAND_H

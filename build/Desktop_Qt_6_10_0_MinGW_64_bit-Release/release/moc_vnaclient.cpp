@@ -58,6 +58,7 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
         "points",
         "band",
         "powerDbM",
+        "powerFreqKHz",
         "stopScan",
         "sendCommand",
         "QHostAddress",
@@ -84,24 +85,19 @@ template <> constexpr inline auto VNAclient::qt_create_metaobjectdata<qt_meta_ta
             { QMetaType::QString, 8 }, { 0x80000000 | 9, 10 },
         }}),
         // Slot 'startScan'
-        QtMocHelpers::SlotData<void(const QString &, quint16, int, int, int, int, double)>(11, 2, QMC::AccessPublic, QMetaType::Void, {{
+        QtMocHelpers::SlotData<void(const QString &, quint16, int, int, int, int, double, int)>(11, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 12 }, { QMetaType::UShort, 13 }, { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
-            { QMetaType::Int, 16 }, { QMetaType::Int, 17 }, { QMetaType::Double, 18 },
-        }}),
-        // Slot 'startScan'
-        QtMocHelpers::SlotData<void(const QString &, quint16, int, int, int, int)>(11, 2, QMC::AccessPublic | QMC::MethodCloned, QMetaType::Void, {{
-            { QMetaType::QString, 12 }, { QMetaType::UShort, 13 }, { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
-            { QMetaType::Int, 16 }, { QMetaType::Int, 17 },
+            { QMetaType::Int, 16 }, { QMetaType::Int, 17 }, { QMetaType::Double, 18 }, { QMetaType::Int, 19 },
         }}),
         // Slot 'stopScan'
-        QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'sendCommand'
-        QtMocHelpers::SlotData<void(const QHostAddress &, quint16, const QVector<VNAcomand*> &)>(20, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 21, 22 }, { QMetaType::UShort, 13 }, { 0x80000000 | 23, 24 },
+        QtMocHelpers::SlotData<void(const QHostAddress &, quint16, const QVector<VNAcomand*> &)>(21, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 22, 23 }, { QMetaType::UShort, 13 }, { 0x80000000 | 24, 25 },
         }}),
         // Slot 'setGraphSettings'
-        QtMocHelpers::SlotData<void(int, const QVector<int> &)>(25, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Int, 26 }, { 0x80000000 | 27, 28 },
+        QtMocHelpers::SlotData<void(int, const QVector<int> &)>(26, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Int, 27 }, { 0x80000000 | 28, 29 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
@@ -130,18 +126,17 @@ void VNAclient::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         case 1: _t->disconnected(); break;
         case 2: _t->error((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 3: _t->dataFromVNA((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<VNAcomand*>>(_a[2]))); break;
-        case 4: _t->startScan((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6])),(*reinterpret_cast<std::add_pointer_t<double>>(_a[7]))); break;
-        case 5: _t->startScan((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6]))); break;
-        case 6: _t->stopScan(); break;
-        case 7: _t->sendCommand((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
-        case 8: _t->setGraphSettings((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[2]))); break;
+        case 4: _t->startScan((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[6])),(*reinterpret_cast<std::add_pointer_t<double>>(_a[7])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[8]))); break;
+        case 5: _t->stopScan(); break;
+        case 6: _t->sendCommand((*reinterpret_cast<std::add_pointer_t<QHostAddress>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<VNAcomand*>>>(_a[3]))); break;
+        case 7: _t->setGraphSettings((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[2]))); break;
         default: ;
         }
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
         switch (_id) {
         default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-        case 8:
+        case 7:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 1:
@@ -181,14 +176,14 @@ int VNAclient::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 8;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 8;
     }
     return _id;
 }

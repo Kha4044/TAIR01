@@ -27,7 +27,7 @@ public:
 
 public slots:
     void sendCommand(const QHostAddress& host, quint16 port, const QVector<VNAcomand*>& commands) override;
-    void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM) override;
+    void startScan(const QString& ip, quint16 port, int startKHz, int stopKHz, int points, int band, double powerDbM, int powerFreqKHz) override;
     void stopScan() override;
 
 private slots:

@@ -20,7 +20,6 @@ public:
 
     void setupAxes(const QString& xTitle = "Frequency (kHz)",
                    const QString& yTitle = "Amplitude");
-
     void addTrace(int traceNum, const QString& name, const QColor& color);
     void removeTrace(int traceNum);
     void clearAllTraces();
