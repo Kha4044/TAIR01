@@ -25,18 +25,12 @@ public:
     virtual QVector<qreal> parseResponse(const QString& data) const = 0;
 };
 
-class CALC_DATA_FDAT : public VNAcomand_REAL
-{
-public:
-    CALC_DATA_FDAT(int type = 1) : VNAcomand_REAL(true, type, "CALC:DATA:FDAT?\n") {}
-    QVector<qreal> parseResponse(const QString& data) const override;
-};
-
 class CALC_TRACE_DATA_FDAT : public VNAcomand_REAL
 {
 public:
     CALC_TRACE_DATA_FDAT(int traceNum)
-        : VNAcomand_REAL(true, traceNum, QString("CALC:TRAC%1:DATA:FDAT?\n").arg(traceNum)) {}
+        : VNAcomand_REAL(true, traceNum,
+                         QString("CALC:TRAC%1:DATA:FDAT?\n").arg(traceNum)) {}
     QVector<qreal> parseResponse(const QString& data) const override;
 };
 
@@ -78,37 +72,17 @@ public:
     SYSTEM_PRESET() : VNAcomand(false, 0, "SYST:PRESet\n") {}
 };
 
-class SYST_CHAN : public VNAcomand
+class TRIGGER_SOURCE_BUS : public VNAcomand
 {
 public:
-    explicit SYST_CHAN(int ch) : VNAcomand(false, ch, QString("SYST:CHAN %1\n").arg(ch)) {}
+    TRIGGER_SOURCE_BUS() : VNAcomand(false, 0, "TRIGger:SEQuence:SOURce BUS\n") {}
 };
 
-class DISPLAY_WINDOW_ACTIVATE : public VNAcomand
+class INITIATE_CONTINUOUS : public VNAcomand
 {
 public:
-    explicit DISPLAY_WINDOW_ACTIVATE(int window = 1)
-        : VNAcomand(false, window, QString("DISP:WINDow%1:ACTivate()\n").arg(window)) {}
-};
-
-class TRIGGER_SOURCE : public VNAcomand
-{
-public:
-    explicit TRIGGER_SOURCE(const QString& src = "BUS")
-        : VNAcomand(false, 0, QString("TRIGger:SEQuence:SOURce %1\n").arg(src)) {}
-};
-
-class INIT_CONT_MODE : public VNAcomand
-{
-public:
-    explicit INIT_CONT_MODE(int ch = 1, bool on = true)
-        : VNAcomand(false, ch, QString("INITiate%1:CONTinuous %2\n").arg(ch).arg(on ? "ON" : "OFF")) {}
-};
-
-class TRIGGER_EXECUTE : public VNAcomand
-{
-public:
-    TRIGGER_EXECUTE() : VNAcomand(false, 0, "SIEEE4882:TRG\n") {}
+    INITIATE_CONTINUOUS(int channel = 1)
+        : VNAcomand(false, 0, QString("INITiate%1:CONTinuous ON\n").arg(channel)) {}
 };
 
 class CALC_PARAMETER_COUNT : public VNAcomand_REAL
@@ -159,26 +133,12 @@ public:
     QVector<qreal> parseResponse(const QString& data) const override;
 };
 
-class SOURCE_POWER_COUPLE : public VNAcomand
-{
-public:
-    SOURCE_POWER_COUPLE(int channel, bool couple)
-        : VNAcomand(false, 0, QString("SOURce%1:POWer:PORT:COUPle %2\n").arg(channel).arg(couple ? "ON" : "OFF")) {}
-};
 
 class SOURCE_POWER_LEVEL_SET : public VNAcomand
 {
 public:
     SOURCE_POWER_LEVEL_SET(int channel, qreal powerDbM)
         : VNAcomand(false, 0, QString("SOURce%1:POWer:LEVel:IMMediate:AMPLitude %2\n").arg(channel).arg(powerDbM)) {}
-};
-
-class SOURCE_POWER_LEVEL_GET : public VNAcomand_REAL
-{
-public:
-    SOURCE_POWER_LEVEL_GET(int channel = 1)
-        : VNAcomand_REAL(true, 100 + channel, QString("SOURce%1:POWer:LEVel:IMMediate:AMPLitude?\n").arg(channel)) {}
-    QVector<qreal> parseResponse(const QString& data) const override;
 };
 
 class OUTPUT_PORT_STATE : public VNAcomand
@@ -210,4 +170,91 @@ public:
     QVector<qreal> parseResponse(const QString& data) const override;
 };
 
+class TRIGGER_SINGLE : public VNAcomand {
+public:
+    TRIGGER_SINGLE() : VNAcomand(false, 0, "TRIG:SING\n") {}
+};
+
+class OPC_QUERY : public VNAcomand
+{
+public:
+    OPC_QUERY() : VNAcomand(true, 0, "*OPC?\n") {}
+};
+
+class ABORT_COMMAND : public VNAcomand
+{
+public:
+    ABORT_COMMAND() : VNAcomand(false, 0, ":ABOR\n") {}
+};
+
+class INITIATE_SINGLE_SHOT : public VNAcomand
+{
+public:
+    INITIATE_SINGLE_SHOT(int channel = 1)
+        : VNAcomand(false, 0, QString("INITiate%1:CONTinuous OFF\n").arg(channel)) {}
+};
+
+class INIT_CONT_MODE : public VNAcomand
+{
+public:
+    explicit INIT_CONT_MODE(int ch = 1, bool on = true)
+        : VNAcomand(false, ch, QString("INITiate%1:CONTinuous %2\n").arg(ch).arg(on ? "ON" : "OFF")) {}
+};
+
+class CALC_PARAMETER_SPORT : public VNAcomand_REAL
+{
+public:
+    CALC_PARAMETER_SPORT(int traceNum, int port)
+        : VNAcomand_REAL(false, 0, QString("CALC1:PAR%1:SPOR %2\n").arg(traceNum).arg(port)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SOURCE_POWER_LEVEL : public VNAcomand_REAL
+{
+public:
+    SOURCE_POWER_LEVEL(int channel, double powerDbM)
+        : VNAcomand_REAL(false, 0, QString("SOURce%1:POWer:LEVel:IMMediate:AMPLitude %2\n").arg(channel).arg(powerDbM)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SENSE_SWEEP_TYPE : public VNAcomand_REAL
+{
+public:
+    SENSE_SWEEP_TYPE(int channel, const QString& sweepType)
+        : VNAcomand_REAL(false, 0, QString("SENSe%1:SWEep:TYPE %2\n").arg(channel).arg(sweepType)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SOURCE_POWER_SPAN : public VNAcomand_REAL
+{
+public:
+    SOURCE_POWER_SPAN(int channel, double powerSpan)
+        : VNAcomand_REAL(false, 0, QString("SOURce%1:POWer:SPAN %2\n").arg(channel).arg(powerSpan)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SENS_FREQ_FIXED : public VNAcomand_REAL
+{
+public:
+    SENS_FREQ_FIXED(int channel, qint64 freqHz)
+        : VNAcomand_REAL(false, 0, QString("SENS:FREQ:FIXed %1\n").arg(freqHz)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+
+class SENS_FREQ_CW : public VNAcomand_REAL
+{
+public:
+    SENS_FREQ_CW(int channel, qint64 freqHz)
+        : VNAcomand_REAL(false, 0, QString("SENS:FREQ:CW %1\n").arg(freqHz)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
+
+class SENS_FREQ_CENTER : public VNAcomand_REAL
+{
+public:
+    SENS_FREQ_CENTER(int channel, qint64 freqHz)
+        : VNAcomand_REAL(false, 0, QString("SENS:FREQ:CENT %1\n").arg(freqHz)) {}
+    QVector<qreal> parseResponse(const QString&) const override { return {}; }
+};
 #endif // VNACOMAND_H
